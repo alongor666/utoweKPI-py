@@ -4,9 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>华安保险车险第49周经营分析 - 四川</title>
-    <script src="https://lib.baomitu.com/echarts/5.4.3/echarts.min.js" onerror="this.remove()"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js" onerror="this.remove()"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js" onerror="console.error('ECharts加载失败，请检查网络连接')"></script>
+    <script src="../asset/echarts.min.js"></script>
+    <script>
+        // 本地优先加载 ECharts，失败时回落到多个 CDN，避免内网环境下图表空白
+        if (typeof echarts === 'undefined') {
+            const cdnSources = [
+                'https://lib.baomitu.com/echarts/5.4.3/echarts.min.js',
+                'https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js',
+                'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js'
+            ];
+            const loadFallback = (idx = 0) => {
+                if (typeof echarts !== 'undefined' || idx >= cdnSources.length) return;
+                const script = document.createElement('script');
+                script.src = cdnSources[idx];
+                script.onerror = () => loadFallback(idx + 1);
+                document.head.appendChild(script);
+            };
+            loadFallback();
+        }
+    </script>
     <style>
         /* 悬浮按钮样式 */
         .float-btn {
