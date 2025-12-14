@@ -297,12 +297,65 @@ class StaticReportGenerator {
     }
 
     /**
+     * 从CSV数据中提取动态信息
+     * @param {Array} csvData - 原始CSV数据
+     * @returns {Object} 提取的信息
+     */
+    extractDynamicInfo(csvData) {
+        if (!csvData || csvData.length === 0) {
+            return {
+                year: '2025',
+                week: '未知',
+                company: '四川分公司',
+                title: '经营分析报告'
+            };
+        }
+
+        // 提取年份（从保单年度字段）
+        let year = '2025';
+        const yearField = csvData[0]['保单年度'] || csvData[0]['年度'] || csvData[0]['年份'];
+        if (yearField) {
+            year = String(yearField).trim();
+        }
+
+        // 提取周次（从周次字段）
+        let week = '未知';
+        const weekField = csvData[0]['周次'] || csvData[0]['周'] || csvData[0]['week'];
+        if (weekField) {
+            week = String(weekField).replace('第', '').replace('周', '').trim();
+        }
+
+        // 提取机构名称（从机构字段）
+        let company = '四川分公司';
+        const companyField = csvData[0]['机构'] || csvData[0]['分公司'] || csvData[0]['机构名称'];
+        if (companyField) {
+            company = String(companyField).trim();
+        }
+
+        return {
+            year: year,
+            week: week,
+            company: company,
+            title: `${company}车险第${week}周经营分析`
+        };
+    }
+
+    /**
      * 生成HTML报告
      * @param {Object} data - 处理后的数据
      * @returns {string} HTML报告
      */
     generateHTML(data) {
+        // 提取动态信息
+        const dynamicInfo = this.extractDynamicInfo(data.original);
+        
         let html = this.template;
+        
+        // 替换动态标题信息
+        html = html.replace(/华安保险车险第49周经营分析 - 四川/g, dynamicInfo.title);
+        html = html.replace(/第49周/g, `第${dynamicInfo.week}周`);
+        html = html.replace(/2025/g, dynamicInfo.year);
+        html = html.replace(/四川分公司/g, dynamicInfo.company);
         
         // 替换数据占位符
         html = html.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
@@ -328,6 +381,7 @@ class StaticReportGenerator {
         const dataScript = `
         <script>
             window.reportData = ${JSON.stringify(data, null, 2)};
+            window.dynamicInfo = ${JSON.stringify(dynamicInfo, null, 2)};
             // 触发图表渲染
             if (typeof renderCharts === 'function') {
                 setTimeout(renderCharts, 100);
