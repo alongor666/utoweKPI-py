@@ -22,15 +22,16 @@ class StaticReportGenerator {
             console.log('开始加载配置数据...');
             
             // 加载业务类型映射
-            const mappingResponse = await fetch('./reference/simple_mapping.json');
+            const mappingResponse = await fetch('./reference/business_type_mapping.json');
             if (!mappingResponse.ok) {
                 throw new Error(`业务映射文件加载失败: ${mappingResponse.status}`);
             }
-            this.businessMapping = await mappingResponse.json();
+            const complexMapping = await mappingResponse.json();
+            this.businessMapping = this.processBusinessMapping(complexMapping);
             console.log('业务映射加载成功:', this.businessMapping);
             
             // 加载年度计划
-            const plansResponse = await fetch('./reference/simple_plans.json');
+            const plansResponse = await fetch('./reference/year-plans.json');
             if (!plansResponse.ok) {
                 throw new Error(`年度计划文件加载失败: ${plansResponse.status}`);
             }
@@ -38,7 +39,7 @@ class StaticReportGenerator {
             console.log('年度计划加载成功:', this.yearPlans);
             
             // 加载阈值配置
-            const thresholdsResponse = await fetch('./reference/simple_thresholds.json');
+            const thresholdsResponse = await fetch('./reference/thresholds.json');
             if (!thresholdsResponse.ok) {
                 throw new Error(`阈值配置文件加载失败: ${thresholdsResponse.status}`);
             }
@@ -61,15 +62,54 @@ class StaticReportGenerator {
     }
 
     /**
+     * 处理复杂的业务类型映射配置
+     * @param {Object} complexMapping - 复杂的映射配置
+     * @returns {Object} 简化的映射对象
+     */
+    processBusinessMapping(complexMapping) {
+        const simpleMapping = {};
+        
+        // 处理主要业务类型
+        if (complexMapping.business_types) {
+            complexMapping.business_types.forEach(type => {
+                simpleMapping[type.csv_raw_value] = type.category;
+            });
+        }
+        
+        // 处理兼容性映射
+        if (complexMapping.compatibility_mappings) {
+            complexMapping.compatibility_mappings.forEach(mapping => {
+                simpleMapping[mapping.csv_raw_value] = 
+                    complexMapping.business_types.find(t => t.ui_full_name === mapping.maps_to)?.category || "其他";
+            });
+        }
+        
+        console.log('业务映射处理完成:', simpleMapping);
+        return simpleMapping;
+    }
+
+    /**
      * 初始化默认配置（当配置文件加载失败时使用）
      */
     initDefaultConfigs() {
         console.log('使用默认配置...');
         this.businessMapping = {
-            "私家车": "个人车险",
-            "企业用车": "商业车险",
-            "摩托车": "个人车险",
-            "货车": "商业车险"
+            "非营业客车新车": "非营业客车",
+            "非营业客车旧车非过户": "非营业客车", 
+            "非营业客车旧车过户": "非营业客车",
+            "1吨以下非营业货车": "非营业货车",
+            "1–2吨非营业货车": "非营业货车",
+            "2吨以下营业货车": "营业货车",
+            "2–9吨营业货车": "营业货车",
+            "9–10吨营业货车": "营业货车",
+            "10吨以上营业货车（普货）": "营业货车",
+            "10吨以上营业货车（牵引）": "营业货车",
+            "自卸车": "营业货车",
+            "特种车": "营业货车",
+            "其他营业货车": "营业货车",
+            "摩托车": "其他",
+            "出租车": "营业客车",
+            "网约车": "营业客车"
         };
         
         this.yearPlans = {
