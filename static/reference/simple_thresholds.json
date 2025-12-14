@@ -1,0 +1,14 @@
+{
+  "成本率": {
+    "warning": 0.15,
+    "critical": 0.20
+  },
+  "赔付率": {
+    "warning": 0.60,
+    "critical": 0.70
+  },
+  "综合成本率": {
+    "warning": 0.75,
+    "critical": 0.85
+  }
+}
