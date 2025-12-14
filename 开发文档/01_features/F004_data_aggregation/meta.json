@@ -1,0 +1,11 @@
+{
+  "id": "F004",
+  "name": "数据聚合与统计",
+  "status": "implemented",
+  "core_files": [
+    "src/kpi_calculator.py",
+    "static/js/static-report-generator.js"
+  ],
+  "tags": ["数据聚合", "统计分析", "多维分析"],
+  "description": "多维度数据聚合统计，支持按业务类型、时间等维度汇总"
+}

@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>华安保险车险第49周经营分析 - 四川</title>
+    <script src="/asset/echarts.min.js"></script>
+    <script>
+        // 本地优先加载 ECharts，失败时回落到多个 CDN，避免内网环境下图表空白
+        if (typeof echarts === 'undefined') {
+            const cdnSources = [
+                'https://lib.baomitu.com/echarts/5.4.3/echarts.min.js',
+                'https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js',
+                'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js'
+            ];
+            const loadFallback = (idx = 0) => {
+                if (typeof echarts !== 'undefined' || idx >= cdnSources.length) return;
+                const script = document.createElement('script');
+                script.src = cdnSources[idx];
+                script.onerror = () => loadFallback(idx + 1);
+                document.head.appendChild(script);
+            };
+            loadFallback();
+        }
+    </script>
+    <style>
+        /* 悬浮按钮样式 */
+        .float-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-red);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(160, 39, 36, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            border: none;
+        }
+
+        .float-btn:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(160, 39, 36, 0.6);
+            background-color: #b92b27;
+        }
+        
+        .float-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
+        }
+
+        /* Tooltip */
+        .float-btn::after {
+            content: "导入新数据";
+            position: absolute;
+            right: 75px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: all 0.2s;
+            pointer-events: none;
+        }
+
+        .float-btn:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-red: #a02724;
+            --success-green: #00b050;
+            --warning-yellow: #ffc000;
+            --danger-red: #c00000;
+            --gray-dark: #333333;
+            --gray-medium: #666666;
+            --gray-light: #cccccc;
+            --background: #f5f5f5;
+
+            /* macOS风格变量 */
+            --blur-backdrop: blur(20px);
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --card-shadow-hover: 0 4px 20px rgba(0,0,0,0.12);
+            --border-radius: 12px;
+            --border-radius-sm: 8px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ebef 100%);
+            color: var(--gray-dark);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-weight: 600;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: var(--blur-backdrop);
+            -webkit-backdrop-filter: var(--blur-backdrop);
+            padding: 24px 48px;
+            border-bottom: 1px solid rgba(160, 39, 36, 0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary-red);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-info {
+            font-size: 13px;
+            color: var(--gray-medium);
+            font-weight: 600;
+        }
+
+        .tabs {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: var(--blur-backdrop);
+            -webkit-backdrop-filter: var(--blur-backdrop);
+            padding: 0 48px;
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            position: sticky;
+            top: 76px;
+            z-index: 99;
+        }
+
+        .tab {
+            padding: 14px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+            font-size: 15px;
+            color: var(--gray-medium);
+            font-weight: 600;
+            border-radius: 6px 6px 0 0;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: rgba(160, 39, 36, 0.05);
+            color: var(--gray-dark);
+        }
+
+        .tab.active {
+            color: var(--primary-red);
+            border-bottom-color: var(--primary-red);
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .content {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 40px;
+        }
+
+        .metric-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 28px 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .metric-card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--gray-medium);
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .metric-value {
+            font-size: 48px;
+            font-weight: 600;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Arial, sans-serif;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+
+        .metric-unit {
+            font-size: 18px;
+            color: var(--gray-medium);
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        .status-good { color: var(--success-green); }
+        .status-warning { color: var(--warning-yellow); }
+        .status-danger { color: var(--danger-red); }
+
+        .dimension-switch {
+            display: inline-flex;
+            gap: 0;
+            margin-bottom: 20px;
+            background: rgba(160, 39, 36, 0.08);
+            border-radius: 10px;
+            padding: 3px;
+        }
+
+        .dimension-btn {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-size: 14px;
+            color: var(--gray-dark);
+            font-weight: 500;
+        }
+
+        .dimension-btn:hover {
+            background: rgba(160, 39, 36, 0.12);
+        }
+
+        .dimension-btn.active {
+            background: white;
+            color: var(--primary-red);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        /* 子标签页样式 */
+        .sub-tabs {
+            display: inline-flex;
+            gap: 0;
+            margin-bottom: 20px;
+            background: rgba(160, 39, 36, 0.06);
+            border-radius: 9px;
+            padding: 3px;
+        }
+
+        .sub-tab {
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 7px;
+            font-size: 13px;
+            color: var(--gray-dark);
+            background: transparent;
+            border: none;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .sub-tab:hover {
+            background: rgba(160, 39, 36, 0.1);
+        }
+
+        .sub-tab.active {
+            background: white;
+            color: var(--primary-red);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 32px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 24px;
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: var(--transition);
+        }
+
+        .chart-container:hover {
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .chart {
+            width: 100%;
+            height: 500px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin: 6px 0 12px 0;
+            text-align: left;
+        }
+
+        .chart-body {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .chart-body p {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 4px 0;
+        }
+
+        .ppt-slide {
+            aspect-ratio: 16/9;
+            width: 100%;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            position: relative;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        
+        .ppt-slide .chart-container {
+            box-shadow: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            border: none;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ppt-slide .chart {
+            flex: 1;
+            height: auto !important;
+            width: 100%;
+        }
+        
+        .ppt-slide .chart-title {
+            margin-top: 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .problem-list {
+            background: linear-gradient(135deg, rgba(255, 192, 0, 0.08) 0%, rgba(255, 192, 0, 0.12) 100%);
+            border-left: 3px solid var(--warning-yellow);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(255, 192, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .problem-list h3 {
+            font-size: 15px;
+            color: var(--gray-dark);
+            margin-bottom: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .problem-list ul {
+            list-style: none;
+        }
+
+        .problem-list li {
+            padding: 6px 0;
+            color: var(--gray-dark);
+            font-size: 14px;
+        }
+        
+        .error-banner {
+            display: none;
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .metric-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .header, .tabs, .content {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>四川分公司车险第49周经营分析</h1>
+        <div class="header-info">
+            数据截止日期：2025年12月06日
+        </div>
+    </div>
+
+    <!-- 悬浮上传按钮 -->
+    <a href="/" class="float-btn" title="导入新数据">
+        <svg viewBox="0 0 24 24">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+        </svg>
+    </a>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="overview">经营概览</div>
+        <div class="tab" data-tab="premium">保费进度</div>
+        <div class="tab" data-tab="cost">变动成本</div>
+        <div class="tab" data-tab="loss">损失暴露</div>
+        <div class="tab" data-tab="expense">费用支出</div>
+    </div>
+
+    <div class="content">
+        <div id="error-banner" class="error-banner"></div>
+    
+        <!-- 经营概览 -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="dimension-switch">
+                <button class="dimension-btn active" onclick="switchDimension('overview', 'kpi')">关键数据</button>
+                <button class="dimension-btn" onclick="switchDimension('overview', 'org')">三级机构</button>
+                <button class="dimension-btn" onclick="switchDimension('overview', 'category')">客户类别</button>
+                <button class="dimension-btn" onclick="switchDimension('overview', 'businessType')">业务类型</button>
+            </div>
+
+            <div id="overview-kpi-content">
+                <div id="kpi-alert-title" style="font-size:16px;color:#a02724;margin-bottom:12px;font-weight:700;text-align:left;"></div>
+                <div class="metric-cards">
+                    <div class="metric-card">
+                        <div class="metric-label">保费时间进度达成率</div>
+                        <div class="metric-value" id="metric-progress">--<span class="metric-unit">%</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">变动成本率</div>
+                        <div class="metric-value" id="metric-cost-rate">--<span class="metric-unit">%</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">满期赔付率</div>
+                        <div class="metric-value" id="metric-claim-rate">--<span class="metric-unit">%</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">费用率</div>
+                        <div class="metric-value" id="metric-expense-rate">--<span class="metric-unit">%</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">签单保费</div>
+                        <div class="metric-value" id="metric-premium">--<span class="metric-unit">万元</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">边际贡献额</div>
+                        <div class="metric-value" id="metric-margin">--<span class="metric-unit">万元</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">已报告赔款</div>
+                        <div class="metric-value" id="metric-claim">--<span class="metric-unit">万元</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">费用金额</div>
+                        <div class="metric-value" id="metric-expense">--<span class="metric-unit">万元</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="overview-chart-content" style="display:none;">
+                <div class="ppt-slide">
+                    <div class="chart-title" id="title-overview"></div>
+                    <div class="chart-body" id="body-overview"></div>
+
+                    <div class="chart-container">
+                        <div id="chart-overview" class="chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 其他标签页内容 -->
+        <div id="tab-premium" class="tab-content">
+            <div class="dimension-switch">
+                <button class="dimension-btn active" onclick="switchDimension('premium', 'org')">三级机构</button>
+                <button class="dimension-btn" onclick="switchDimension('premium', 'category')">客户类别</button>
+                <button class="dimension-btn" onclick="switchDimension('premium', 'businessType')">业务类型</button>
+            </div>
+            <div class="ppt-slide">
+                <div class="chart-title" id="title-premium"></div>
+                <div class="chart-body" id="body-premium"></div>
+                <div class="chart-container">
+                    <div id="chart-premium" class="chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-cost" class="tab-content">
+            <div class="dimension-switch">
+                <button class="dimension-btn active" onclick="switchDimension('cost', 'org')">三级机构</button>
+                <button class="dimension-btn" onclick="switchDimension('cost', 'category')">客户类别</button>
+                <button class="dimension-btn" onclick="switchDimension('cost', 'businessType')">业务类型</button>
+            </div>
+            <div class="ppt-slide">
+                <div class="chart-title" id="title-cost"></div>
+                <div class="chart-body" id="body-cost"></div>
+                <div class="chart-container">
+                    <div id="chart-cost" class="chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-loss" class="tab-content">
+            <div class="dimension-switch">
+                <button class="dimension-btn active" onclick="switchDimension('loss', 'org')">三级机构</button>
+                <button class="dimension-btn" onclick="switchDimension('loss', 'category')">客户类别</button>
+                <button class="dimension-btn" onclick="switchDimension('loss', 'businessType')">业务类型</button>
+            </div>
+            
+            <div class="sub-tabs">
+                <div class="sub-tab active" onclick="switchSubTab('loss', 'bubble')">气泡图分析</div>
+                <div class="sub-tab" onclick="switchSubTab('loss', 'quadrant')">二级指标分析</div>
+            </div>
+
+            <div class="ppt-slide">
+                <div class="chart-title" id="title-loss"></div>
+                <div class="chart-body" id="body-loss"></div>
+                
+                <div class="chart-container">
+                    <div id="chart-loss" class="chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-expense" class="tab-content">
+            <div class="dimension-switch">
+                <button class="dimension-btn active" onclick="switchDimension('expense', 'org')">三级机构</button>
+                <button class="dimension-btn" onclick="switchDimension('expense', 'category')">客户类别</button>
+                <button class="dimension-btn" onclick="switchDimension('expense', 'businessType')">业务类型</button>
+            </div>
+            <div class="ppt-slide">
+                <div class="chart-title" id="title-expense"></div>
+                <div class="chart-body" id="body-expense"></div>
+                <div class="chart-container">
+                    <div id="chart-expense" class="chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            const banner = document.getElementById('error-banner');
+            banner.style.display = 'block';
+            banner.innerHTML = `<strong>发生错误:</strong> ${message}<br><small>${source}:${lineno}</small>`;
+            console.error('Global error:', error);
+            return false;
+        };
+
+        // 数据
+        const DATA = {
+  "summary": {
+    "签单保费": 396907295.8399999,
+    "满期赔付率": 71.23,
+    "费用率": 16.37,
+    "变动成本率": 87.61,
+    "已报告赔款": 140918603.98000002
+  },
+  "problems": [
+    "乐山(保费未达标)",
+    "乐山(费用率高)",
+    "天府(保费未达标)",
+    "天府(费用率高)",
+    "宜宾(成本超标)"
+  ],
+  "dataByOrg": [
+    {
+      "机构": "乐山",
+      "签单保费": 11277731.88,
+      "满期保费": 4944404.962571013,
+      "已报告赔款": 2267094.36,
+      "费用额": 2374300.057498467,
+      "保单件数": 3268,
+      "赔案件数": 561,
+      "满期赔付率": 45.85171273716113,
+      "费用率": 21.052992594273903,
+      "变动成本率": 66.90470533143503,
+      "出险率": 17.166462668298653,
+      "案均赔款": 4041.1664171122993,
+      "保费占比": 2.841402009537826,
+      "已报告赔款占比": 1.6087970615446627,
+      "年计划达成率": 94.77085613445378
+    },
+    {
+      "机构": "天府",
+      "签单保费": 164363388.92999998,
+      "满期保费": 87435105.14374812,
+      "已报告赔款": 59609556.089999996,
+      "费用额": 28064225.809999995,
+      "保单件数": 101312,
+      "赔案件数": 11994,
+      "满期赔付率": 68.1757698947106,
+      "费用率": 17.07449937160407,
+      "变动成本率": 85.25026926631466,
+      "出险率": 11.838676563487049,
+      "案均赔款": 4969.947981490745,
+      "保费占比": 41.41102737407419,
+      "已报告赔款占比": 42.30070012505953,
+      "年计划达成率": 83.3063299189052
+    },
+    {
+      "机构": "宜宾",
+      "签单保费": 26951624.12999997,
+      "满期保费": 13384434.649787193,
+      "已报告赔款": 11860481.25,
+      "费用额": 2919653.8435007175,
+      "保单件数": 45304,
+      "赔案件数": 2538,
+      "满期赔付率": 88.61398751861796,
+      "费用率": 10.832942124073472,
+      "变动成本率": 99.44692964269143,
+      "出险率": 5.602154335158043,
+      "案均赔款": 4673.160460992908,
+      "保费占比": 6.790407838928873,
+      "已报告赔款占比": 8.416547506873764,
+      "年计划达成率": 118.72962171806154
+    },
+    {
+      "机构": "德阳",
+      "签单保费": 10227604.370000001,
+      "满期保费": 5360564.919027431,
+      "已报告赔款": 2934830.16,
+      "费用额": 1648641.73,
+      "保单件数": 6087,
+      "赔案件数": 724,
+      "满期赔付率": 54.74852379051997,
+      "费用率": 16.11952975846288,
+      "变动成本率": 70.86805354898284,
+      "出险率": 11.894200755708887,
+      "案均赔款": 4053.6328176795582,
+      "保费占比": 2.576824481987583,
+      "已报告赔款占比": 2.0826420906188714,
+      "年计划达成率": 79.90315914062501
+    },
+    {
+      "机构": "新都",
+      "签单保费": 38116663.69,
+      "满期保费": 17372323.437821466,
+      "已报告赔款": 14275328.65,
+      "费用额": 7217331.752399747,
+      "保单件数": 9200,
+      "赔案件数": 2247,
+      "满期赔付率": 82.17282334797564,
+      "费用率": 18.93484647842679,
+      "变动成本率": 101.10766982640243,
+      "出险率": 24.423913043478258,
+      "案均赔款": 6353.061259457054,
+      "保费占比": 9.603417243649124,
+      "已报告赔款占比": 10.130194485907653,
+      "年计划达成率": 108.90475339999999
+    },
+    {
+      "机构": "本部",
+      "签单保费": 24683.67,
+      "满期保费": 12586.16062688188,
+      "已报告赔款": 10800.04,
+      "费用额": 1318.9399999999991,
+      "保单件数": 11,
+      "赔案件数": 6,
+      "满期赔付率": 85.80885243855039,
+      "费用率": 5.34337073863003,
+      "变动成本率": 91.15222317718042,
+      "出险率": 54.54545454545454,
+      "案均赔款": 1800.006666666667,
+      "保费占比": 0.006219001328196902,
+      "已报告赔款占比": 0.007664027101441345,
+      "年计划达成率": 2.4683669999999998
+    },
+    {
+      "机构": "武侯",
+      "签单保费": 15674529.96,
+      "满期保费": 7135021.036533009,
+      "已报告赔款": 4688057.64,
+      "费用额": 3127188.2290002373,
+      "保单件数": 6624,
+      "赔案件数": 905,
+      "满期赔付率": 65.70488882928342,
+      "费用率": 19.950762395941325,
+      "变动成本率": 85.65565122522474,
+      "出险率": 13.662439613526569,
+      "案均赔款": 5180.174187845303,
+      "保费占比": 3.9491664991511444,
+      "已报告赔款占比": 3.3267840495108487,
+      "年计划达成率": 116.10762933333334
+    },
+    {
+      "机构": "泸州",
+      "签单保费": 12048914.859999996,
+      "满期保费": 5640340.999483055,
+      "已报告赔款": 4344163.41,
+      "费用额": 1619179.4249261953,
+      "保单件数": 11365,
+      "赔案件数": 1043,
+      "满期赔付率": 77.01951726674235,
+      "费用率": 13.438383819123409,
+      "变动成本率": 90.45790108586576,
+      "出险率": 9.177298724153102,
+      "案均赔款": 4165.0655896452545,
+      "保费占比": 3.03570002020248,
+      "已报告赔款占比": 3.0827465553210773,
+      "年计划达成率": 112.08292893023253
+    },
+    {
+      "机构": "自贡",
+      "签单保费": 7667465.18999999,
+      "满期保费": 3305122.4197451184,
+      "已报告赔款": 1936170.84,
+      "费用额": 832640.0611022308,
+      "保单件数": 9150,
+      "赔案件数": 536,
+      "满期赔付率": 58.580911509756184,
+      "费用率": 10.859391473836373,
+      "变动成本率": 69.44030298359256,
+      "出险率": 5.85792349726776,
+      "案均赔款": 3612.2590298507466,
+      "保费占比": 1.9318025318161136,
+      "已报告赔款占比": 1.3739639659464644,
+      "年计划达成率": 81.13719777777767
+    },
+    {
+      "机构": "资阳",
+      "签单保费": 8484287.26,
+      "满期保费": 3727642.000385961,
+      "已报告赔款": 1975082.3599999999,
+      "费用额": 1417752.0299999996,
+      "保单件数": 6242,
+      "赔案件数": 482,
+      "满期赔付率": 52.98476516241365,
+      "费用率": 16.710325647319014,
+      "变动成本率": 69.69509080973266,
+      "出险率": 7.7218840115347644,
+      "案均赔款": 4097.681244813278,
+      "保费占比": 2.1375992200002694,
+      "已报告赔款占比": 1.4015767288471828,
+      "年计划达成率": 70.70239383333333
+    },
+    {
+      "机构": "达州",
+      "签单保费": 3705382.83,
+      "满期保费": 2018361.5925789436,
+      "已报告赔款": 1269024.35,
+      "费用额": 464901.8255007784,
+      "保单件数": 1221,
+      "赔案件数": 294,
+      "满期赔付率": 62.873984258614215,
+      "费用率": 12.546661082811204,
+      "变动成本率": 75.42064534142541,
+      "出险率": 24.078624078624077,
+      "案均赔款": 4316.4093537414965,
+      "保费占比": 0.9335637991128545,
+      "已报告赔款占比": 0.9005371286392446,
+      "年计划达成率": 57.0058896923077
+    },
+    {
+      "机构": "青羊",
+      "签单保费": 40232246.63,
+      "满期保费": 18416403.86944884,
+      "已报告赔款": 15379266.09,
+      "费用额": 5027001.03874888,
+      "保单件数": 17794,
+      "赔案件数": 2883,
+      "满期赔付率": 83.50851881301767,
+      "费用率": 12.494954818159206,
+      "变动成本率": 96.00347363117687,
+      "出险率": 16.202090592334496,
+      "案均赔款": 5334.466212278876,
+      "保费占比": 10.136434137562013,
+      "已报告赔款占比": 10.913581071369908,
+      "年计划达成率": 92.70102910138249
+    },
+    {
+      "机构": "高新",
+      "签单保费": 58132772.44,
+      "满期保费": 29072686.227210272,
+      "已报告赔款": 20368748.74,
+      "费用额": 10269632.301500876,
+      "保单件数": 28729,
+      "赔案件数": 3955,
+      "满期赔付率": 70.06146105940525,
+      "费用率": 17.665822341606656,
+      "变动成本率": 87.7272834010119,
+      "出险率": 13.766577326046853,
+      "案均赔款": 5150.1261036662445,
+      "保费占比": 14.646435842649339,
+      "已报告赔款占比": 14.45426520325936,
+      "年计划达成率": 104.36763454219029
+    }
+  ],
+  "dataByCategory": [
+    {
+      "客户类别": "挂车",
+      "签单保费": 311793.31,
+      "满期保费": 139135.72900625347,
+      "已报告赔款": 1101.16,
+      "费用额": 105865.69999999998,
+      "保单件数": 49,
+      "赔案件数": 6,
+      "满期赔付率": 0.7914286343736399,
+      "费用率": 33.953807411711296,
+      "变动成本率": 34.74523604608493,
+      "出险率": 12.244897959183673,
+      "案均赔款": 183.52666666666667,
+      "保费占比": 0.07855570136097703,
+      "已报告赔款占比": 0.0007814156320738767,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "摩托车",
+      "签单保费": 15944787.279999945,
+      "满期保费": 7001301.386934397,
+      "已报告赔款": 8780423.92,
+      "费用额": 0.0,
+      "保单件数": 62087,
+      "赔案件数": 1446,
+      "满期赔付率": 125.41131190817958,
+      "费用率": 0.0,
+      "变动成本率": 125.41131190817958,
+      "出险率": 2.3289899656933013,
+      "案均赔款": 6072.21571230982,
+      "保费占比": 4.0172572908378985,
+      "已报告赔款占比": 6.230847930658021,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "特种车",
+      "签单保费": 976700.13,
+      "满期保费": 470023.8241497682,
+      "已报告赔款": 76913.93000000001,
+      "费用额": 204260.46000000002,
+      "保单件数": 148,
+      "赔案件数": 14,
+      "满期赔付率": 16.36383647980622,
+      "费用率": 20.913323724038,
+      "变动成本率": 37.27716020384422,
+      "出险率": 9.45945945945946,
+      "案均赔款": 5493.852142857143,
+      "保费占比": 0.24607764589787848,
+      "已报告赔款占比": 0.054580394516905724,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "营业公路客运",
+      "签单保费": 714863.0,
+      "满期保费": 353603.4775276651,
+      "已报告赔款": 152217.29,
+      "费用额": 110218.61000000003,
+      "保单件数": 102,
+      "赔案件数": 30,
+      "满期赔付率": 43.047452775147235,
+      "费用率": 15.418144455650948,
+      "变动成本率": 58.46559723079818,
+      "出险率": 29.411764705882355,
+      "案均赔款": 5073.909666666667,
+      "保费占比": 0.18010830425454646,
+      "已报告赔款占比": 0.10801788103265882,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "营业出租租赁",
+      "签单保费": 1704618.61,
+      "满期保费": 898245.8860730113,
+      "已报告赔款": 865000.97,
+      "费用额": 66530.42000000004,
+      "保单件数": 180,
+      "赔案件数": 134,
+      "满期赔付率": 96.29890694870278,
+      "费用率": 3.902950467025585,
+      "变动成本率": 100.20185741572837,
+      "出险率": 74.44444444444444,
+      "案均赔款": 6455.231119402985,
+      "保费占比": 0.429475252248112,
+      "已报告赔款占比": 0.6138302151522634,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "营业城市公交",
+      "签单保费": 6139.74,
+      "满期保费": 2270.862739726023,
+      "已报告赔款": 0.0,
+      "费用额": 1658.1500000000015,
+      "保单件数": 0,
+      "赔案件数": 0,
+      "满期赔付率": 0.0,
+      "费用率": 27.006843938016946,
+      "变动成本率": 27.006843938016946,
+      "出险率": 0.0,
+      "案均赔款": 0.0,
+      "保费占比": 0.0015468952232299182,
+      "已报告赔款占比": 0.0,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "营业货车",
+      "签单保费": 59062246.26,
+      "满期保费": 25024781.255503,
+      "已报告赔款": 19288897.21,
+      "费用额": 9071710.873149898,
+      "保单件数": 6965,
+      "赔案件数": 2380,
+      "满期赔付率": 77.07918408181223,
+      "费用率": 15.359576459748922,
+      "变动成本率": 92.43876054156115,
+      "出险率": 34.17085427135678,
+      "案均赔款": 8104.578659663866,
+      "保费占比": 14.880614914120649,
+      "已报告赔款占比": 13.687970690326734,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "非营业个人客车",
+      "签单保费": 268839470.85,
+      "满期保费": 138830273.96312043,
+      "已报告赔款": 94232420.91,
+      "费用额": 48465081.73610203,
+      "保单件数": 151683,
+      "赔案件数": 20786,
+      "满期赔付率": 67.87598858663375,
+      "费用率": 18.02751715842474,
+      "变动成本率": 85.9035057450585,
+      "出险率": 13.703579174989947,
+      "案均赔款": 4533.456216203213,
+      "保费占比": 67.7335674268819,
+      "已报告赔款占比": 66.87010674855539,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "非营业企业客车",
+      "签单保费": 22995071.44,
+      "满期保费": 12460783.507433265,
+      "已报告赔款": 6862962.49,
+      "费用额": 3378513.2749261954,
+      "保单件数": 13007,
+      "赔案件数": 1681,
+      "满期赔付率": 55.07649246859974,
+      "费用率": 14.69233650237442,
+      "变动成本率": 69.76882897097416,
+      "出险率": 12.923810256015992,
+      "案均赔款": 4082.6665615704937,
+      "保费占比": 5.793562295531524,
+      "已报告赔款占比": 4.8701607141765555,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "非营业机关客车",
+      "签单保费": 48541.020000000004,
+      "满期保费": 21094.665921430536,
+      "已报告赔款": 3559.9199999999996,
+      "费用额": 5162.679999999999,
+      "保单件数": 21,
+      "赔案件数": 2,
+      "满期赔付率": 16.875925000468474,
+      "费用率": 10.635705636181521,
+      "变动成本率": 27.511630636649997,
+      "出险率": 9.523809523809524,
+      "案均赔款": 1779.9599999999998,
+      "保费占比": 0.012229812983726988,
+      "已报告赔款占比": 0.0025262242879621802,
+      "年计划达成率": null
+    },
+    {
+      "客户类别": "非营业货车",
+      "签单保费": 26303064.2,
+      "满期保费": 12623482.860558368,
+      "已报告赔款": 10655106.18,
+      "费用额": 3574765.14,
+      "保单件数": 12065,
+      "赔案件数": 1689,
+      "满期赔付率": 84.40702378019229,
+      "费用率": 13.59067944638937,
+      "变动成本率": 97.99770322658166,
+      "出险率": 13.99917115623705,
+      "案均赔款": 6308.529413854351,
+      "保费占比": 6.627004460659551,
+      "已报告赔款占比": 7.561177785661457,
+      "年计划达成率": null
+    }
+  ],
+  "dataByBusinessType": [
+    {
+      "业务类型简称": "摩托",
+      "签单保费": 15944787.279999945,
+      "满期保费": 7001301.386934397,
+      "已报告赔款": 8780423.92,
+      "费用额": 0.0,
+      "保单件数": 62087,
+      "赔案件数": 1446,
+      "满期赔付率": 125.41131190817958,
+      "费用率": 0.0,
+      "变动成本率": 125.41131190817958,
+      "出险率": 2.3289899656933013,
+      "案均赔款": 6072.21571230982,
+      "保费占比": 4.017257290837899,
+      "已报告赔款占比": 6.230847930658021,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营客-出租",
+      "签单保费": 1154587.46,
+      "满期保费": 821976.5934310058,
+      "已报告赔款": 839867.48,
+      "费用额": 47303.710000000036,
+      "保单件数": 159,
+      "赔案件数": 124,
+      "满期赔付率": 102.17656885998613,
+      "费用率": 4.097022671630267,
+      "变动成本率": 106.2735915316164,
+      "出险率": 77.9874213836478,
+      "案均赔款": 6773.1248387096775,
+      "保费占比": 0.29089600319804504,
+      "已报告赔款占比": 0.595994748939749,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营客-网约",
+      "签单保费": 550031.15,
+      "满期保费": 76269.29264200559,
+      "已报告赔款": 25133.49,
+      "费用额": 19226.710000000006,
+      "保单件数": 21,
+      "赔案件数": 10,
+      "满期赔付率": 32.95361623185901,
+      "费用率": 3.495567478314638,
+      "变动成本率": 36.44918371017365,
+      "出险率": 47.61904761904761,
+      "案均赔款": 2513.349,
+      "保费占比": 0.1385792490500671,
+      "已报告赔款占比": 0.017835466212514493,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-2–9t",
+      "签单保费": 6293484.11,
+      "满期保费": 2435677.998034028,
+      "已报告赔款": 1770587.4,
+      "费用额": 1234806.593149898,
+      "保单件数": 859,
+      "赔案件数": 214,
+      "满期赔付率": 72.69382083465631,
+      "费用率": 19.62039740734164,
+      "变动成本率": 92.31421824199795,
+      "出险率": 24.912689173457508,
+      "案均赔款": 8273.77289719626,
+      "保费占比": 1.5856307444993432,
+      "已报告赔款占比": 1.256461070428495,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-9–10t",
+      "签单保费": 2290432.1,
+      "满期保费": 1122106.4564494493,
+      "已报告赔款": 841664.92,
+      "费用额": 293663.73,
+      "保单件数": 355,
+      "赔案件数": 100,
+      "满期赔付率": 75.00758196002029,
+      "费用率": 12.821324412978669,
+      "变动成本率": 87.82890637299896,
+      "出险率": 28.169014084507044,
+      "案均赔款": 8416.6492,
+      "保费占比": 0.5770697903530886,
+      "已报告赔款占比": 0.5972702654075782,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-<2t",
+      "签单保费": 14751453.06,
+      "满期保费": 7924920.591770459,
+      "已报告赔款": 8853012.18,
+      "费用额": 1078119.1400000001,
+      "保单件数": 3218,
+      "赔案件数": 1112,
+      "满期赔付率": 111.71105221159321,
+      "费用率": 7.308562320029511,
+      "变动成本率": 119.01961453162272,
+      "出险率": 34.55562461155998,
+      "案均赔款": 7961.341888489208,
+      "保费占比": 3.716599118890111,
+      "已报告赔款占比": 6.282358702089096,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-≥10t卸",
+      "签单保费": 7856669.61,
+      "满期保费": 3700819.7910453165,
+      "已报告赔款": 2098015.0,
+      "费用额": 1618040.8399999999,
+      "保单件数": 950,
+      "赔案件数": 210,
+      "满期赔付率": 56.69054745860523,
+      "费用率": 20.59448749048262,
+      "变动成本率": 77.28503494908784,
+      "出险率": 22.105263157894736,
+      "案均赔款": 9990.547619047618,
+      "保费占比": 1.9794722073255007,
+      "已报告赔款占比": 1.4888133580274205,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-≥10t普",
+      "签单保费": 3791921.35,
+      "满期保费": 2005965.8763098493,
+      "已报告赔款": 1425537.94,
+      "费用额": 667892.1800000002,
+      "保单件数": 430,
+      "赔案件数": 170,
+      "满期赔付率": 71.06491475430292,
+      "费用率": 17.613555724197713,
+      "变动成本率": 88.67847047850063,
+      "出险率": 39.53488372093023,
+      "案均赔款": 8385.517294117646,
+      "保费占比": 0.9553670062866741,
+      "已报告赔款占比": 1.0116037909390025,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-≥10t牵",
+      "签单保费": 24078286.03,
+      "满期保费": 7835290.541893896,
+      "已报告赔款": 4300079.77,
+      "费用额": 4179188.3899999997,
+      "保单件数": 1153,
+      "赔案件数": 574,
+      "满期赔付率": 54.88092301119203,
+      "费用率": 17.35666892898024,
+      "变动成本率": 72.23759194017228,
+      "出险率": 49.78317432784042,
+      "案均赔款": 7491.428170731707,
+      "保费占比": 6.066476046765936,
+      "已报告赔款占比": 3.0514635034351407,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-≥10t特",
+      "签单保费": 976700.13,
+      "满期保费": 470023.8241497682,
+      "已报告赔款": 76913.93000000001,
+      "费用额": 204260.46000000002,
+      "保单件数": 148,
+      "赔案件数": 14,
+      "满期赔付率": 16.36383647980622,
+      "费用率": 20.913323724038,
+      "变动成本率": 37.27716020384422,
+      "出险率": 9.45945945945946,
+      "案均赔款": 5493.852142857143,
+      "保费占比": 0.2460776458978785,
+      "已报告赔款占比": 0.054580394516905724,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "营货-其他",
+      "签单保费": 1032796.05,
+      "满期保费": 495010.06927364453,
+      "已报告赔款": 153318.45,
+      "费用额": 217742.46000000002,
+      "保单件数": 151,
+      "赔案件数": 36,
+      "满期赔付率": 30.972794194868115,
+      "费用率": 21.082813010371215,
+      "变动成本率": 52.055607205239326,
+      "出险率": 23.841059602649008,
+      "案均赔款": 4258.845833333334,
+      "保费占比": 0.2602109008387535,
+      "已报告赔款占比": 0.10879929666473269,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "非营客-新",
+      "签单保费": 11838182.18,
+      "满期保费": 6185096.28730104,
+      "已报告赔款": 4941183.21,
+      "费用额": 2408725.6449261946,
+      "保单件数": 3058,
+      "赔案件数": 1174,
+      "满期赔付率": 79.8885414305516,
+      "费用率": 20.347090527087957,
+      "变动成本率": 100.23563195763955,
+      "出险率": 38.39110529758012,
+      "案均赔款": 4208.84430153322,
+      "保费占比": 2.982606342608571,
+      "已报告赔款占比": 3.5064094239120354,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "非营客-旧",
+      "签单保费": 247196206.73,
+      "满期保费": 124629162.31648913,
+      "已报告赔款": 83533850.3,
+      "费用额": 44361854.68610203,
+      "保单件数": 141362,
+      "赔案件数": 18314,
+      "满期赔付率": 67.02592615351953,
+      "费用率": 17.946009476818656,
+      "变动成本率": 84.9719356303382,
+      "出险率": 12.955391123498536,
+      "案均赔款": 4561.201829201704,
+      "保费占比": 62.28059028414762,
+      "已报告赔款占比": 59.27808532069735,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "非营客-过户",
+      "签单保费": 32848694.400000002,
+      "满期保费": 20497893.53268495,
+      "已报告赔款": 12623909.81,
+      "费用额": 5078177.360000001,
+      "保单件数": 20291,
+      "赔案件数": 2981,
+      "满期赔付率": 61.58637613114013,
+      "费用率": 15.459297402090966,
+      "变动成本率": 77.0456735332311,
+      "出险率": 14.691242422749001,
+      "案均赔款": 4234.790275075478,
+      "保费占比": 8.276162908640982,
+      "已报告赔款占比": 8.958298942410515,
+      "年计划达成率": null
+    },
+    {
+      "业务类型简称": "非营货-1–2t",
+      "签单保费": 26303064.2,
+      "满期保费": 12623482.860558368,
+      "已报告赔款": 10655106.18,
+      "费用额": 3574765.14,
+      "保单件数": 12065,
+      "赔案件数": 1689,
+      "满期赔付率": 84.40702378019229,
+      "费用率": 13.59067944638937,
+      "变动成本率": 97.99770322658166,
+      "出险率": 13.99917115623705,
+      "案均赔款": 6308.529413854351,
+      "保费占比": 6.6270044606595535,
+      "已报告赔款占比": 7.561177785661457,
+      "年计划达成率": null
+    }
+  ],
+  "thresholds": {
+    "四象限基准线": {
+      "保费达成率": 100,
+      "变动成本率": 88,
+      "满期赔付率": 70,
+      "费用率": 14,
+      "出险率": 12,
+      "案均赔款": 4800
+    },
+    "问题机构识别阈值": {
+      "年保费未达标": 95,
+      "变动成本率超标": 93,
+      "满期赔付率超标": 75,
+      "费用率超标": 17
+    }
+  },
+  "week": 49,
+  "organization": "四川"
+};
+
+        // 当前维度
+        let currentDimensions = {
+            overview: 'kpi',
+            premium: 'org',
+            cost: 'org',
+            loss: 'org',
+            expense: 'org'
+        };
+        
+        // 当前子标签页
+        let currentSubTab = {
+            loss: 'bubble'
+        };
+
+        // 标签页切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                try {
+                    const tabName = tab.dataset.tab;
+
+                    // 更新标签样式
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // 更新内容显示
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`tab-${tabName}`).classList.add('active');
+
+                    // 渲染图表
+                    renderChart(tabName);
+                } catch (e) {
+                    console.error('Tab switch error:', e);
+                    document.getElementById('error-banner').style.display = 'block';
+                    document.getElementById('error-banner').innerText = '切换标签页时出错: ' + e.message;
+                }
+            });
+        });
+
+        // 维度切换
+        function switchDimension(tab, dimension) {
+            try {
+                currentDimensions[tab] = dimension;
+
+                // 更新按钮样式
+                const container = document.querySelector(`#tab-${tab} .dimension-switch`);
+                container.querySelectorAll('.dimension-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                // 经营概览特殊处理
+                if (tab === 'overview') {
+                    const kpiContent = document.getElementById('overview-kpi-content');
+                    const chartContent = document.getElementById('overview-chart-content');
+                    if (dimension === 'kpi') {
+                        if (kpiContent) kpiContent.style.display = 'block';
+                        if (chartContent) chartContent.style.display = 'none';
+                        return; // 不需要渲染图表
+                    } else {
+                        if (kpiContent) kpiContent.style.display = 'none';
+                        if (chartContent) chartContent.style.display = 'block';
+                    }
+                }
+
+                // 重新渲染图表
+                renderChart(tab);
+            } catch (e) {
+                console.error('Dimension switch error:', e);
+                alert('切换维度出错: ' + e.message);
+            }
+        }
+        
+        // 子标签页切换
+        function switchSubTab(tab, subTab) {
+            try {
+                currentSubTab[tab] = subTab;
+                
+                // 更新按钮样式
+                const container = document.querySelector(`#tab-${tab} .sub-tabs`);
+                container.querySelectorAll('.sub-tab').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                // 重新渲染图表
+                renderChart(tab);
+            } catch (e) {
+                console.error('Sub-tab switch error:', e);
+                alert('切换视图出错: ' + e.message);
+            }
+        }
+
+        // 渲染图表
+        function renderChart(tab) {
+            try {
+                const dimension = currentDimensions[tab];
+                // 经营概览 - KPI模式不渲染图表
+                if (tab === 'overview' && dimension === 'kpi') return;
+
+                let data, dimField;
+
+                if (dimension === 'org') {
+                    data = DATA.dataByOrg;
+                    dimField = '机构';
+                } else if (dimension === 'category') {
+                    data = DATA.dataByCategory;
+                    dimField = '客户类别';
+                } else if (dimension === 'businessType') {
+                    data = DATA.dataByBusinessType;
+                    dimField = '业务类型简称';
+                } else {
+                    data = DATA.dataByOrg;
+                    dimField = '机构';
+                }
+
+                // 克隆数据以避免修改原始数据
+                data = [...data];
+
+                if (dimension === 'org') {
+                    data = data.filter(d => d[dimField] !== '本部');
+                }
+
+                // 排序逻辑：从差到好
+                if (tab === 'overview' || tab === 'cost') {
+                    // 变动成本率：高 -> 低 (差 -> 好)
+                    data.sort((a, b) => (b.变动成本率 || 0) - (a.变动成本率 || 0));
+                } else if (tab === 'premium') {
+                    // 年计划达成率：低 -> 高 (差 -> 好)
+                    const hasPlan = data.some(d => d.年计划达成率 != null);
+                    if (hasPlan) {
+                        data.sort((a, b) => (a.年计划达成率 || 0) - (b.年计划达成率 || 0));
+                    } else {
+                        data.sort((a, b) => (a.签单保费 || 0) - (b.签单保费 || 0));
+                    }
+                } else if (tab === 'loss') {
+                    // 满期赔付率：高 -> 低 (差 -> 好)
+                    data.sort((a, b) => (b.满期赔付率 || 0) - (a.满期赔付率 || 0));
+                } else if (tab === 'expense') {
+                    // 费用率：高 -> 低 (差 -> 好)
+                    data.sort((a, b) => (b.费用率 || 0) - (a.费用率 || 0));
+                }
+
+                if (dimension === 'org') {
+                    data = data.slice(0, 12);
+                }
+
+                const chartDom = document.getElementById(`chart-${tab}`);
+                if (!chartDom) return;
+                
+                // 确保 echarts 已加载
+                if (typeof echarts === 'undefined') {
+                    throw new Error('图表库加载失败，请检查网络连接');
+                }
+                
+                // 销毁旧实例以避免冲突
+                const oldChart = echarts.getInstanceByDom(chartDom);
+                if (oldChart) {
+                    oldChart.dispose();
+                }
+                
+                const chart = echarts.init(chartDom);
+
+                let option;
+
+                const getAxisLabelStyle = (categoriesLen) => {
+                    const base = 14;
+                    const computed = Math.max(10, Math.min(base, Math.floor(chartDom.clientWidth / Math.max(8, categoriesLen * 8))));
+                    return { fontWeight: 'bold', fontSize: computed, rotate: 0, interval: 0, hideOverlap: true, overflow: 'truncate' };
+                };
+
+                const renderTitleAndBody = () => {
+                    const titleEl = document.getElementById(`title-${tab}`);
+                    const bodyEl = document.getElementById(`body-${tab}`);
+                    if (!titleEl || !bodyEl) return;
+                    const dim = currentDimensions[tab];
+                    const tabLabelMap = { overview: '经营概览', premium: '保费进度', cost: '变动成本', loss: '损失暴露', expense: '费用支出' };
+                    const dimLabelMap = { org: '三级机构', category: '客户类别', businessType: '业务类型' };
+                    const subTabLabelMapLoss = { bubble: '气泡图分析', quadrant: '二级指标分析' };
+                    let title = '';
+                    let body = [];
+                    if (tab === 'overview') {
+                        const thr = DATA.thresholds || {};
+                        const base = thr['四象限基准线'] || {};
+                        const planFail = (thr['问题机构识别阈值'] || {})['年保费未达标'] || 95;
+                        if (dim === 'org') {
+                            const namesTitle = data.filter(d => (d.年计划达成率 || 0) < planFail && (d.变动成本率 || 0) >= 100).map(d => d[dimField]);
+                            const namesSuperProfit = data.filter(d => (d.年计划达成率 || 0) >= 100 && (d.变动成本率 || 0) < 100).map(d => d[dimField]);
+                            const namesSuperLoss = data.filter(d => (d.年计划达成率 || 0) >= 100 && (d.变动成本率 || 0) >= 100).map(d => d[dimField]);
+                            const namesProfitLag = data.filter(d => (d.变动成本率 || 0) < 100 && (d.年计划达成率 || 0) < planFail).map(d => d[dimField]);
+                            title = '进度落后且亏损机构有' + (namesTitle.length ? namesTitle.join('、') : '无');
+                            body = [
+                                '1. 超进度且盈利机构' + (namesSuperProfit.length ? '：' + namesSuperProfit.join('、') : '：无'),
+                                '2. 超进度但亏损机构' + (namesSuperLoss.length ? '：' + namesSuperLoss.join('、') : '：无'),
+                                '3. 盈利但进度落后机构' + (namesProfitLag.length ? '：' + namesProfitLag.join('、') : '：无')
+                            ];
+                        } else if (dim === 'category') {
+                            const vcThr = (base['变动成本率'] || 88);
+                            const names = data.filter(d => (d.变动成本率 || 0) >= vcThr).map(d => d[dimField]);
+                            title = '变动成本率超预警线的客户类别有' + (names.length ? names.join('、') : '无');
+                            body = [];
+                        } else if (dim === 'businessType') {
+                            const vcThr = (base['变动成本率'] || 88);
+                            const names = data.filter(d => (d.变动成本率 || 0) >= vcThr).map(d => d[dimField]);
+                            title = '变动成本率超预警线的业务类型有' + (names.length ? names.join('、') : '无');
+                            body = [];
+                        }
+                    } else if (tab === 'premium') {
+                        if (DATA.isSingleOrgMode && (dim === 'category' || dim === 'businessType')) {
+                            // Single Org Mode Logic for Category/Business Type
+                            const zeroList = data.filter(d => (d.签单保费 || 0) <= 0).map(d => d[dimField]);
+                            title = '保费为0的' + dimLabelMap[dim] + '有' + (zeroList.length ? zeroList.join('、') : '无');
+                            
+                            const top3 = [...data].filter(d => (d.签单保费 || 0) > 0)
+                                .sort((a, b) => (b.签单保费 || 0) - (a.签单保费 || 0))
+                                .slice(0, 3)
+                                .map(d => d[dimField]);
+                            body = ['1. 规模前三的' + dimLabelMap[dim] + (top3.length ? '：' + top3.join('、') : '：无')];
+                        } else {
+                            // Standard/Branch Mode Logic
+                            if (dim === 'org') {
+                                const low90 = data.filter(d => (d.年计划达成率 || 0) < 90).map(d => d[dimField]);
+                                const mid = data.filter(d => (d.年计划达成率 || 0) >= 90 && (d.年计划达成率 || 0) < 100).map(d => d[dimField]);
+                                const high = data.filter(d => (d.年计划达成率 || 0) >= 100).map(d => d[dimField]);
+                                title = '低于90%的三级机构有' + (low90.length ? low90.join('、') : '无');
+                                body = [
+                                    '1. 90%–100% 的三级机构' + (mid.length ? '：' + mid.join('、') : '：无'),
+                                    '2. 100% 以上的三级机构' + (high.length ? '：' + high.join('、') : '：无')
+                                ];
+                            } else if (dim === 'category') {
+                                const lowList = data.filter(d => (d.签单保费 || 0) < 1000000).map(d => `${d[dimField]}`);
+                                title = '低于100万的客户类别及保费有' + (lowList.length ? lowList.join('、') : '无');
+                                const highList = data.filter(d => (d.签单保费 || 0) >= 1000000).map(d => d[dimField]);
+                                body = ['1. 超100万的客户类别' + (highList.length ? '：' + highList.join('、') : '：无')];
+                            } else if (dim === 'businessType') {
+                                const lowList = data.filter(d => (d.签单保费 || 0) < 5000000).map(d => `${d[dimField]}`);
+                                title = '低于500万的业务类型及保费有' + (lowList.length ? lowList.join('、') : '无');
+                                const highList = data.filter(d => (d.签单保费 || 0) >= 5000000).map(d => d[dimField]);
+                                body = ['1. 超500万的业务类型' + (highList.length ? '：' + highList.join('、') : '：无')];
+                            }
+                        }
+                    } else if (tab === 'cost') {
+                        const thr = DATA.thresholds && DATA.thresholds['四象限基准线'] ? DATA.thresholds['四象限基准线'] : {};
+                        const paidThr = thr['满期赔付率'] || 70;
+                        const feeThr = thr['费用率'] || 14;
+                        const noun = dim === 'org' ? '三级机构' : (dim === 'category' ? '客户类别' : '业务类型');
+                        const namesHH = data.filter(d => (d.满期赔付率 || 0) >= paidThr && (d.费用率 || 0) >= feeThr).map(d => d[dimField]);
+                        const namesHL = data.filter(d => (d.满期赔付率 || 0) >= paidThr && (d.费用率 || 0) < feeThr).map(d => d[dimField]);
+                        const namesLH = data.filter(d => (d.满期赔付率 || 0) < paidThr && (d.费用率 || 0) >= feeThr).map(d => d[dimField]);
+                        const namesLL = data.filter(d => (d.满期赔付率 || 0) < paidThr && (d.费用率 || 0) < feeThr).map(d => d[dimField]);
+                        title = '高赔付高费用' + noun + '有' + (namesHH.length ? namesHH.join('、') : '无');
+                        body = [
+                            '1. 高赔付低费用' + noun + (namesHL.length ? '：' + namesHL.join('、') : '：无'),
+                            '2. 高费用低赔付' + noun + (namesLH.length ? '：' + namesLH.join('、') : '：无'),
+                            '3. 低赔付低费用' + noun + (namesLL.length ? '：' + namesLL.join('、') : '：无')
+                        ];
+                    } else if (tab === 'loss') {
+                        const subTab = currentSubTab['loss'] || 'bubble';
+                        const noun = dim === 'org' ? '机构' : (dim === 'category' ? '客户类别' : '业务类型');
+                        if (subTab === 'bubble') {
+                            const paidThr = (DATA.thresholds && DATA.thresholds['四象限基准线'] ? DATA.thresholds['四象限基准线']['满期赔付率'] : 70);
+                            const shareMean = data.reduce((s, d) => s + (d.已报告赔款占比 || 0), 0) / Math.max(1, data.length);
+                            const namesHH = data.filter(d => d.满期赔付率 >= paidThr && d.已报告赔款占比 >= shareMean).map(d => d[dimField]);
+                            const namesLH = data.filter(d => d.满期赔付率 < paidThr && d.已报告赔款占比 >= shareMean).map(d => d[dimField]);
+                            const namesHL = data.filter(d => d.满期赔付率 >= paidThr && d.已报告赔款占比 < shareMean).map(d => d[dimField]);
+                            const namesLL = data.filter(d => d.满期赔付率 < paidThr && d.已报告赔款占比 < shareMean).map(d => d[dimField]);
+                            title = `损失暴露分析：高赔付高占比${noun}有` + (namesHH.length ? namesHH.join('、') : '无');
+                            body = [
+                                '1. 高占比低赔付' + noun + (namesLH.length ? '：' + namesLH.join('、') : '：无'),
+                                '2. 高赔付低占比' + noun + (namesHL.length ? '：' + namesHL.join('、') : '：无'),
+                                '3. 低赔付低占比' + noun + (namesLL.length ? '：' + namesLL.join('、') : '：无')
+                            ];
+                        } else {
+                            const freqThr = (DATA.thresholds && DATA.thresholds['四象限基准线'] ? DATA.thresholds['四象限基准线']['出险率'] : 20);
+                            const amtThr = (DATA.thresholds && DATA.thresholds['四象限基准线'] ? DATA.thresholds['四象限基准线']['案均赔款'] : 4500);
+                            const namesHH = data.filter(d => d.出险率 >= freqThr && d.案均赔款 >= amtThr).map(d => d[dimField]);
+                            const namesLH = data.filter(d => d.出险率 < freqThr && d.案均赔款 >= amtThr).map(d => d[dimField]);
+                            const namesHL = data.filter(d => d.出险率 >= freqThr && d.案均赔款 < amtThr).map(d => d[dimField]);
+                            const namesLL = data.filter(d => d.出险率 < freqThr && d.案均赔款 < amtThr).map(d => d[dimField]);
+                            title = `损失暴露分析：高频高额${noun}有` + (namesHH.length ? namesHH.join('、') : '无');
+                            body = [
+                                '1. 高频低额' + noun + (namesHL.length ? '：' + namesHL.join('、') : '：无'),
+                                '2. 低频高额' + noun + (namesLH.length ? '：' + namesLH.join('、') : '：无'),
+                                '3. 低频低额' + noun + (namesLL.length ? '：' + namesLL.join('、') : '：无')
+                            ];
+                        }
+                    } else if (tab === 'expense') {
+                        const thr = DATA.thresholds && DATA.thresholds['四象限基准线'] ? DATA.thresholds['四象限基准线'] : {};
+                        const feeThr = thr['费用率'] || 14;
+                        const noun = dim === 'org' ? '三级机构' : (dim === 'category' ? '客户类别' : '业务类型');
+                        const totalPremium = data.reduce((sum, item) => sum + (item.签单保费 || 0), 0);
+                        const totalExpense = data.reduce((sum, item) => sum + ((item.签单保费 || 0) * (item.费用率 || 0) / 100), 0);
+                        const calcShares = d => {
+                            const expenseShare = totalExpense > 0 ? ((d.签单保费 || 0) * (d.费用率 || 0) / 100) / totalExpense * 100 : 0;
+                            const premiumShare = d.保费占比 || (totalPremium > 0 ? (d.签单保费 || 0) / totalPremium * 100 : 0);
+                            return { expenseShare, premiumShare, diff: expenseShare - premiumShare };
+                        };
+                        const namesHH = data.filter(d => (d.费用率 || 0) >= feeThr && calcShares(d).expenseShare >= calcShares(d).premiumShare).map(d => d[dimField]);
+                        const namesHL = data.filter(d => (d.费用率 || 0) >= feeThr && calcShares(d).expenseShare < calcShares(d).premiumShare).map(d => d[dimField]);
+                        const namesLH = data.filter(d => (d.费用率 || 0) < feeThr && calcShares(d).expenseShare >= calcShares(d).premiumShare).map(d => d[dimField]);
+                        const namesLL = data.filter(d => (d.费用率 || 0) < feeThr && calcShares(d).expenseShare < calcShares(d).premiumShare).map(d => d[dimField]);
+                        title = '高费用率高占比' + noun + '有' + (namesHH.length ? namesHH.join('、') : '无');
+                        body = [
+                            '1. 高费用率低占比' + noun + (namesHL.length ? '：' + namesHL.join('、') : '：无'),
+                            '2. 高占比低费用率' + noun + (namesLH.length ? '：' + namesLH.join('、') : '：无'),
+                            '3. 低费用率低占比' + noun + (namesLL.length ? '：' + namesLL.join('、') : '：无')
+                        ];
+                    }
+                    const tabLabel = tabLabelMap[tab] || tab;
+                    const dimLabelText = dimLabelMap[dim] || '';
+                    const subLabel = tab === 'loss' ? (subTabLabelMapLoss[currentSubTab['loss'] || 'bubble'] || '') : '';
+                    const prefix = tabLabel + (subLabel ? `（${subLabel}）` : '') + (dimLabelText ? `（${dimLabelText}）` : '');
+                    const normalizedTitle = title.replace('损失暴露分析：', '').replace('有', '：');
+                    titleEl.textContent = prefix + '——' + normalizedTitle;
+                    bodyEl.innerHTML = body.map(t => `<p>${t}</p>`).join('');
+                };
+
+                renderTitleAndBody();
+
+                // Filter out zero items for Chart in Single Org Mode
+                if (DATA.isSingleOrgMode && tab === 'premium' && (dimension === 'category' || dimension === 'businessType')) {
+                     data = data.filter(d => (d.签单保费 || 0) > 0);
+                }
+
+                if (tab === 'overview') {
+                    // 经营概览 - 检查是否有年计划达成率数据
+                    const hasYearPlan = data.some(d => d.年计划达成率 !== null && d.年计划达成率 !== undefined);
+
+                    if (hasYearPlan) {
+                        // 四象限散点图：年计划达成率 vs 变动成本率
+                        option = {
+                            grid: {
+                                left: '5%',
+                                right: '15%',
+                                bottom: '10%',
+                                top: '5%',
+                                containLabel: true
+                            },
+                            tooltip: {
+                                trigger: 'item',
+                                formatter: params => {
+                                    const d = params.data;
+                                    return `${d.name}<br/>
+                                           年计划达成率: ${d.value[0].toFixed(1)}%<br/>
+                                           变动成本率: ${d.value[1].toFixed(1)}%<br/>
+                                           签单保费: ${Math.round(d.value[2]/10000)}万元`;
+                                }
+                            },
+                            xAxis: {
+                                name: '年计划达成率 (%)',
+                                nameLocation: 'middle',
+                                nameGap: 30,
+                                splitLine: { show: false },
+                                min: 0,
+                                max: 130,
+                                axisLabel: { fontWeight: 'bold' }
+                            },
+                            yAxis: {
+                                name: '变动成本率 (%)',
+                                nameLocation: 'middle',
+                                nameGap: 40,
+                                splitLine: { show: false },
+                                min: 0,
+                                max: 130,
+                                axisLabel: { fontWeight: 'bold' }
+                            },
+                            series: [{
+                                type: 'scatter',
+                                symbolSize: d => Math.max(d[3] * 0.8, 10),
+                                data: data.filter(d => d.年计划达成率).map(d => ({
+                                    name: d[dimField],
+                                    value: [d.年计划达成率, d.变动成本率, d.签单保费, d.变动成本率],
+                                    itemStyle: {
+                                        color: d.变动成本率 > 95 ? '#c00000' : '#00b050'
+                                    }
+                                })),
+                                label: {
+                                    show: true,
+                                    position: 'right',
+                                    formatter: params => `${params.data.name} ${params.data.value[3].toFixed(0)}%`,
+                                    fontSize: 10,
+                                    fontWeight: 'bold'
+                                },
+                                labelLayout: { hideOverlap: true },
+                                markLine: {
+                                    silent: true,
+                                    lineStyle: { type: 'solid', color: '#a02724', width: 3 },
+                                    data: [
+                                        { xAxis: 100 },
+                                        { yAxis: 90 }
+                                    ]
+                                }
+                            }]
+                        };
+                    } else {
+                        // 无计划数据 - 使用保费占比 vs 变动成本率
+                        const sortedData = [...data].sort((a, b) => b.变动成本率 - a.变动成本率);
+                        option = {
+                            tooltip: {
+                                trigger: 'axis',
+                                axisPointer: { type: 'shadow' },
+                                formatter: params => {
+                                    const name = params[0].name;
+                                    const idx = sortedData.findIndex(d => d[dimField] === name);
+                                    const item = sortedData[idx];
+                                    return `${name}<br/>
+                                           变动成本率: ${item.变动成本率.toFixed(1)}%<br/>
+                                           签单保费: ${Math.round(item.签单保费/10000)}万元<br/>
+                                           保费占比: ${item.保费占比.toFixed(1)}%`;
+                                }
+                            },
+                            grid: {
+                                left: '3%',
+                                right: '4%',
+                                bottom: '15%',
+                                containLabel: true
+                            },
+                            xAxis: {
+                                type: 'category',
+                                data: sortedData.map(d => d[dimField]),
+                                axisLabel: getAxisLabelStyle(sortedData.length)
+                            },
+                            yAxis: {
+                                type: 'value',
+                                name: '变动成本率 (%)',
+                                axisLine: { show: true },
+                                axisLabel: { fontWeight: 'bold' },
+                                min: 0,
+                                max: 130,
+                                splitLine: { show: false }
+                            },
+                            series: [{
+                                name: '变动成本率',
+                                type: 'bar',
+                                data: sortedData.map(d => ({
+                                    value: parseFloat(d.变动成本率.toFixed(1)),
+                                    itemStyle: {
+                                        color: d.变动成本率 > 95 ? '#c00000' :
+                                               d.变动成本率 > 85 ? '#ffc000' : '#00b050'
+                                    }
+                                })),
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: params => `${params.value.toFixed(1)}%`,
+                                    fontSize: 10
+                                },
+                                markLine: {
+                                    silent: true,
+                                    lineStyle: { type: 'solid', color: '#a02724', width: 3 },
+                                    data: [{ yAxis: 90, label: { formatter: '成本率基准: 90%' } }]
+                                }
+                            }]
+                        };
+                    }
+                } else if (tab === 'cost') {
+                    // 满期赔付率 vs 费用率（气泡大小：满期赔付率）
+                    option = {
+                        grid: {
+                            left: '5%',
+                            right: '15%',
+                            bottom: '10%',
+                            top: '5%',
+                            containLabel: true
+                        },
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: params => {
+                                const d = params.data;
+                                return `${d.name}<br/>
+                                       满期赔付率: ${d.value[0].toFixed(1)}%<br/>
+                                       费用率: ${d.value[1].toFixed(1)}%<br/>
+                                       签单保费占比: ${d.value[3].toFixed(1)}%`;
+                            }
+                        },
+                        xAxis: {
+                            name: '满期赔付率 (%)',
+                            nameLocation: 'middle',
+                            nameGap: 30,
+                            splitLine: { show: false },
+                            min: 0,
+                            max: 130,
+                            axisLabel: { fontWeight: 'bold' }
+                        },
+                        yAxis: {
+                            name: '费用率 (%)',
+                            nameLocation: 'middle',
+                            nameGap: 40,
+                            splitLine: { show: false },
+                            min: 0,
+                            max: 30,
+                            axisLabel: { fontWeight: 'bold' }
+                        },
+                        series: [{
+                            type: 'scatter',
+                            symbolSize: d => Math.max(d[2] * 0.8, 10),
+                            data: data.map(d => ({
+                                name: d[dimField],
+                                value: [d.满期赔付率, d.费用率, d.变动成本率, d.保费占比],
+                                itemStyle: {
+                                    color: d.变动成本率 > 95 ? '#c00000' : '#00b050'
+                                }
+                            })),
+                            label: {
+                                show: true,
+                                position: 'right',
+                                formatter: params => `${params.data.name} ${params.data.value[2].toFixed(0)}%`,
+                                fontSize: 10,
+                                fontWeight: 'bold'
+                            },
+                            labelLayout: { hideOverlap: true },
+                            markLine: {
+                                silent: true,
+                                lineStyle: { type: 'solid', color: '#a02724', width: 3 },
+                                data: [
+                                    { xAxis: DATA.thresholds['四象限基准线']['满期赔付率'] },
+                                    { yAxis: DATA.thresholds['四象限基准线']['费用率'] }
+                                ]
+                            }
+                        }]
+                    };
+                } else if (tab === 'premium') {
+                    // 保费进度 - 检查是否有年计划达成率数据
+                    const premiumData = data.filter(d => d.年计划达成率 !== null && d.年计划达成率 !== undefined);
+
+                    if (premiumData.length > 0) {
+                        // 有计划数据 - 显示年计划达成率柱状图（从低到高排序）
+                        premiumData.sort((a, b) => a.年计划达成率 - b.年计划达成率);
+                        option = {
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: { type: 'shadow' },
+                            formatter: params => {
+                                const p = params[0];
+                                const index = p.dataIndex;
+                                const item = premiumData[index];
+                                return `${item[dimField]}<br/>
+                                   年计划达成率: ${item.年计划达成率.toFixed(1)}%<br/>
+                                   签单保费: ${Math.round(item.签单保费/10000)}万元`;
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '15%',
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: premiumData.map(d => d[dimField]),
+                            axisLabel: getAxisLabelStyle(premiumData.length)
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: '年计划达成率 (%)',
+                            axisLine: { show: true },
+                            axisLabel: { fontWeight: 'bold' },
+                            min: 0,
+                            max: 130,
+                            splitLine: { show: false }
+                        },
+                        series: [{
+                            name: '年计划达成率',
+                            type: 'bar',
+                            data: premiumData.map(d => ({
+                                value: d.年计划达成率,
+                                itemStyle: {
+                                    color: d.年计划达成率 < 100 ? '#c00000' : '#00b050'
+                                }
+                            })),
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: params => `${params.value.toFixed(1)}%`,
+                                fontSize: 10,
+                                fontWeight: 'bold'
+                            },
+                            markLine: {
+                                silent: true,
+                                lineStyle: { type: 'solid', color: '#a02724', width: 3 },
+                                data: [{ yAxis: 100, label: { formatter: '达标线: 100%' } }]
+                            }
+                        }]
+                    };
+                    } else {
+                        // 无计划数据 - 显示签单保费分布（从低到高排序）
+                        let filtered = [...data];
+                        if (dimension === 'category') {
+                            filtered = filtered.filter(d => d.签单保费 > 1000000);
+                        } else if (dimension === 'businessType') {
+                            filtered = filtered.filter(d => d.签单保费 > 5000000);
+                        }
+                        const sortedData = filtered.sort((a, b) => a.签单保费 - b.签单保费);
+                        option = {
+                            tooltip: {
+                                trigger: 'axis',
+                                axisPointer: { type: 'shadow' },
+                                formatter: params => {
+                                    const name = params[0].name;
+                                    const idx = sortedData.findIndex(d => d[dimField] === name);
+                                    const item = sortedData[idx];
+                                    return `${name}<br/>
+                                           签单保费: ${Math.round(item.签单保费/10000)}万元<br/>
+                                           保费占比: ${item.保费占比.toFixed(1)}%<br/>
+                                           变动成本率: ${item.变动成本率.toFixed(1)}%`;
+                                }
+                            },
+                            grid: {
+                                left: '3%',
+                                right: '4%',
+                                bottom: '15%',
+                                containLabel: true
+                            },
+                            xAxis: {
+                                type: 'category',
+                                data: sortedData.map(d => d[dimField]),
+                                axisLabel: getAxisLabelStyle(sortedData.length)
+                            },
+                            yAxis: {
+                                type: 'value',
+                                name: '签单保费 (万元)',
+                                axisLine: { show: true },
+                                axisLabel: { fontWeight: 'bold' },
+                                min: 0,
+                                splitLine: { show: false }
+                            },
+                            series: [{
+                                name: '签单保费',
+                                type: 'bar',
+                                data: sortedData.map(d => ({
+                                    value: Math.round(d.签单保费/10000),
+                                    itemStyle: { color: '#a02724' }
+                                })),
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: params => `${params.value}万`,
+                                    fontSize: 10,
+                                    fontWeight: 'bold'
+                                }
+                            }]
+                        };
+                    }
+                } else if (tab === 'loss') {
+                    // 损失暴露 - 气泡图或二级指标分析
+                    const subTab = currentSubTab['loss'] || 'bubble';
+                    
+                    if (subTab === 'bubble') {
+                        // 气泡图: X=满期赔付率, Y=当年已报告赔款占比（气泡大小：满期赔付率）
+                        option = {
+                            grid: {
+                                left: '5%',
+                                right: '15%',
+                                bottom: '10%',
+                                top: '5%',
+                                containLabel: true
+                            },
+                            tooltip: {
+                                trigger: 'item',
+                                formatter: params => {
+                                    const d = params.data;
+                                    return `${d.name}<br/>
+                                           满期赔付率: ${d.value[0].toFixed(1)}%<br/>
+                                           已报告赔款占比: ${d.value[1].toFixed(1)}%<br/>
+                                           签单保费: ${Math.round(d.value[3]/10000)}万元`;
+                                }
+                            },
+                            xAxis: {
+                                name: '满期赔付率 (%)',
+                                nameLocation: 'middle',
+                                nameGap: 30,
+                                splitLine: { show: false },
+                                min: 0,
+                                max: 130,
+                                axisLabel: { fontWeight: 'bold' }
+                            },
+                            yAxis: {
+                                name: '已报告赔款占比 (%)',
+                                nameLocation: 'middle',
+                                nameGap: 40,
+                                splitLine: { show: false },
+                                min: 0,
+                                max: 50,
+                                axisLabel: { fontWeight: 'bold' }
+                            },
+                            series: [{
+                                type: 'scatter',
+                                symbolSize: d => Math.max(d[2] * 0.8, 10),
+                                data: data.map(d => ({
+                                    name: d[dimField],
+                                    value: [d.满期赔付率, d.已报告赔款占比, d.变动成本率, d.签单保费],
+                                    itemStyle: {
+                                        color: d.满期赔付率 > 75 ? '#c00000' :
+                                               d.满期赔付率 > 60 ? '#ffc000' : '#00b050',
+                                        opacity: 0.7
+                                    }
+                                })),
+                                label: {
+                                    show: true,
+                                    position: 'right',
+                                    formatter: params => `${params.data.name} ${params.data.value[2].toFixed(0)}%`,
+                                    fontSize: 10,
+                                    fontWeight: 'bold'
+                                },
+                                labelLayout: { hideOverlap: true },
+                                markLine: {
+                                    silent: true,
+                                    lineStyle: { type: 'solid', color: '#a02724', width: 3 },
+                                    data: [
+                                        { xAxis: DATA.thresholds['四象限基准线']['满期赔付率'], label: { formatter: '赔付率基准: ' + DATA.thresholds['四象限基准线']['满期赔付率'] + '%' } }
+                                    ]
+                                }
+                            }]
+                        };
+                    } else {
+                        // 二级指标: X=出险率, Y=案均赔款（气泡大小：满期赔付率）
+                        option = {
+                            grid: {
+                                left: '5%',
+                                right: '15%',
+                                bottom: '10%',
+                                top: '5%',
+                                containLabel: true
+                            },
+                            tooltip: {
+                                trigger: 'item',
+                                formatter: params => {
+                                    const d = params.data;
+                                    return `${d.name}<br/>
+                                           出险率: ${d.value[0].toFixed(1)}%<br/>
+                                           案均赔款: ${Math.round(d.value[1])}元<br/>
+                                           满期赔付率: ${d.value[2].toFixed(1)}%<br/>
+                                           签单保费: ${Math.round(d.value[3]/10000)}万元`;
+                                }
+                            },
+                            xAxis: {
+                                name: '出险率 (%)',
+                                nameLocation: 'middle',
+                                nameGap: 30,
+                                splitLine: { show: false },
+                                min: 0,
+                                max: 40,
+                                axisLabel: { fontWeight: 'bold' }
+                            },
+                            yAxis: {
+                                name: '案均赔款 (元)',
+                                nameLocation: 'middle',
+                                nameGap: 40,
+                                splitLine: { show: false },
+                                min: 0,
+                                max: 10000,
+                                axisLabel: { fontWeight: 'bold' }
+                            },
+                            series: [{
+                                type: 'scatter',
+                                symbolSize: d => Math.max(d[2] * 0.8, 10),
+                                data: data.map(d => ({
+                                    name: d[dimField],
+                                    value: [d.出险率, d.案均赔款, d.变动成本率, d.签单保费],
+                                    itemStyle: {
+                                        color: '#1890ff',
+                                        opacity: 0.7
+                                    }
+                                })),
+                                label: {
+                                    show: true,
+                                    position: 'right',
+                                    formatter: params => `${params.data.name} ${params.data.value[2].toFixed(0)}%`,
+                                    fontSize: 10,
+                                    fontWeight: 'bold'
+                                },
+                                labelLayout: { hideOverlap: true },
+                                markLine: {
+                                    silent: true,
+                                    lineStyle: { type: 'solid', color: '#a02724', width: 3 },
+                                    data: [
+                                        { xAxis: DATA.thresholds['四象限基准线']['出险率'], label: { formatter: '出险率基准: ' + DATA.thresholds['四象限基准线']['出险率'] + '%' } },
+                                        { yAxis: DATA.thresholds['四象限基准线']['案均赔款'], label: { formatter: '案均基准: ' + DATA.thresholds['四象限基准线']['案均赔款'] } }
+                                    ]
+                                }
+                            }]
+                        };
+                    }
+                } else if (tab === 'expense') {
+                    // 费用支出 - 费用率散点图（气泡大小：费用率）
+                    option = {
+                        grid: {
+                            left: '5%',
+                            right: '15%',
+                            bottom: '10%',
+                            top: '5%',
+                            containLabel: true
+                        },
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: params => {
+                                const d = params.data;
+                                const expenseShare = d.value[3];
+                                const premiumShare = d.value[4];
+                                const diff = expenseShare - premiumShare;
+                                return `${d.name}<br/>
+                                       费用率: ${d.value[0].toFixed(1)}%<br/>
+                                       费用占比差异: ${diff.toFixed(1)}%<br/>
+                                       保费占比: ${premiumShare.toFixed(1)}%<br/>
+                                       签单保费: ${Math.round(d.value[2]/10000)}万元`;
+                            }
+                        },
+                        xAxis: {
+                            name: '费用率 (%)',
+                            nameLocation: 'middle',
+                            nameGap: 30,
+                            splitLine: { show: false },
+                            min: 0,
+                            max: 30,
+                            axisLabel: { fontWeight: 'bold' }
+                        },
+                        yAxis: {
+                            name: '费用占比超保费占比 (%)',
+                            nameLocation: 'middle',
+                            nameGap: 40,
+                            splitLine: { show: false },
+                            min: -10,
+                            max: 10,
+                            axisLabel: { fontWeight: 'bold' }
+                        },
+                        series: [{
+                            type: 'scatter',
+                            symbolSize: d => Math.max(d[5] * 0.8, 10),
+                            data: data.map(d => {
+                                // 计算费用占比（假设费用 = 签单保费 * 费用率）
+                                const totalPremium = data.reduce((sum, item) => sum + item.签单保费, 0);
+                                const totalExpense = data.reduce((sum, item) => sum + (item.签单保费 * item.费用率 / 100), 0);
+                                const expenseShare = (d.签单保费 * d.费用率 / 100) / totalExpense * 100;
+                                const premiumShare = d.保费占比;
+                                const diff = expenseShare - premiumShare;
+
+                                return {
+                                    name: d[dimField],
+                                    value: [d.费用率, diff, d.签单保费, expenseShare, premiumShare, d.变动成本率],
+                                    itemStyle: {
+                                        color: diff > 2 ? '#c00000' :
+                                               diff > 0 ? '#ffc000' : '#00b050',
+                                        opacity: 0.7
+                                    }
+                                };
+                            }),
+                            label: {
+                                show: true,
+                                position: 'right',
+                                formatter: params => `${params.data.name} ${params.data.value[5].toFixed(0)}%`,
+                                fontSize: 10,
+                                fontWeight: 'bold'
+                            },
+                            labelLayout: { hideOverlap: true },
+                            markLine: {
+                                silent: true,
+                                lineStyle: { type: 'solid', color: '#a02724', width: 3 },
+                                data: [
+                                    { xAxis: DATA.thresholds['四象限基准线']['费用率'], label: { formatter: '费用率基准: ' + DATA.thresholds['四象限基准线']['费用率'] + '%' } },
+                                    { yAxis: 0, label: { formatter: '平衡线' } }
+                                ]
+                            }
+                        }]
+                    };
+                } else {
+                    // 默认柱状图（按签单保费从低到高排序）
+                    const sortedData = [...data].sort((a, b) => a.签单保费 - b.签单保费);
+                    option = {
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: { type: 'shadow' },
+                            formatter: params => {
+                                const name = params[0].name;
+                                let result = `${name}<br/>`;
+                                params.forEach(p => {
+                                    const value = p.seriesName === '签单保费'
+                                        ? Math.round(p.value) + '万元'
+                                        : p.value.toFixed(1) + '%';
+                                    result += `${p.marker}${p.seriesName}: ${value}<br/>`;
+                                });
+                                return result;
+                            }
+                        },
+                        legend: {
+                            data: ['签单保费', '变动成本率'],
+                            bottom: 10
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: sortedData.map(d => d[dimField]),
+                            axisLabel: getAxisLabelStyle(sortedData.length)
+                        },
+                        yAxis: [
+                            { type: 'value', name: '签单保费(万元)', axisLabel: { fontWeight: 'bold' }, splitLine: { show: false } },
+                            { type: 'value', name: '成本率(%)', axisLabel: { fontWeight: 'bold' }, splitLine: { show: false }, min: 0, max: 130 }
+                        ],
+                        series: [
+                            {
+                                name: '签单保费',
+                                type: 'bar',
+                                data: sortedData.map(d => Math.round(d.签单保费 / 10000)),
+                                itemStyle: { color: '#a02724' }
+                            },
+                            {
+                                name: '变动成本率',
+                                type: 'line',
+                                yAxisIndex: 1,
+                                data: sortedData.map(d => parseFloat(d.变动成本率.toFixed(1))),
+                                itemStyle: { color: '#00b050' }
+                            }
+                        ]
+                    };
+                }
+
+                chart.setOption(option);
+            } catch (e) {
+                console.error('Render chart error:', e);
+                const chartDom = document.getElementById(`chart-${tab}`);
+                if (chartDom) {
+                    chartDom.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:red;">图表渲染出错: ${e.message}</div>`;
+                }
+            }
+        }
+
+        // 初始化渲染
+        function renderKPI() {
+            try {
+                const summary = DATA.summary || {};
+                const thresholds = DATA.thresholds && DATA.thresholds['四象限基准线'] ? DATA.thresholds['四象限基准线'] : {};
+                const orgs = DATA.dataByOrg || [];
+                
+                // 1. 计算整体保费进度 (Total Premium / Total Plan)
+                let totalPlan = 0;
+                let hasPlanData = false;
+                orgs.forEach(d => {
+                    if (d.年计划达成率 && d.签单保费) {
+                        totalPlan += d.签单保费 / (d.年计划达成率 / 100);
+                        hasPlanData = true;
+                    }
+                });
+                const progressRate = hasPlanData && totalPlan > 0 ? (summary.签单保费 / totalPlan * 100) : 0;
+
+                // 辅助函数
+                const formatVal = (val, fixed=1) => val !== undefined && val !== null ? val.toFixed(fixed) : '--';
+                const formatMoney = (val) => val !== undefined && val !== null ? Math.round(val / 10000) : '--';
+                const setStatus = (el, val, badThr, warnThr, isHighBad = true) => {
+                    if (!el || val === undefined || val === null) return;
+                    // isHighBad: true means higher is worse (Cost, Claim, Expense)
+                    // false means lower is worse (Progress)
+                    let cls = 'status-good';
+                    if (isHighBad) {
+                        if (val > badThr) cls = 'status-danger';
+                        else if (val > warnThr) cls = 'status-warning';
+                    } else {
+                        if (val < badThr) cls = 'status-danger';
+                        else if (val < warnThr) cls = 'status-warning';
+                    }
+                    el.className = `metric-value ${cls}`;
+                };
+
+                // 更新数值与颜色
+                // 1. 保费进度
+                const elProgress = document.getElementById('metric-progress');
+                if (elProgress) {
+                    elProgress.innerHTML = `${formatVal(progressRate)}<span class="metric-unit">%</span>`;
+                    setStatus(elProgress, progressRate, 95, 100, false);
+                }
+
+                // 2. 变动成本率
+                const elCost = document.getElementById('metric-cost-rate');
+                if (elCost) {
+                    const val = summary.变动成本率;
+                    elCost.innerHTML = `${formatVal(val)}<span class="metric-unit">%</span>`;
+                    setStatus(elCost, val, 93, 88, true);
+                }
+
+                // 3. 满期赔付率
+                const elClaim = document.getElementById('metric-claim-rate');
+                if (elClaim) {
+                    const val = summary.满期赔付率;
+                    elClaim.innerHTML = `${formatVal(val)}<span class="metric-unit">%</span>`;
+                    setStatus(elClaim, val, 75, 70, true);
+                }
+
+                // 4. 费用率
+                const elExpense = document.getElementById('metric-expense-rate');
+                if (elExpense) {
+                    const val = summary.费用率;
+                    elExpense.innerHTML = `${formatVal(val)}<span class="metric-unit">%</span>`;
+                    setStatus(elExpense, val, 17, 14, true);
+                }
+
+                // 5. 金额指标
+                const premiumWan = summary.签单保费;
+                const claimWan = summary.已报告赔款;
+                const expenseWan = summary.签单保费 * (summary.费用率 / 100);
+                const marginWan = summary.签单保费 * ((100 - summary.变动成本率) / 100);
+
+                const elPrem = document.getElementById('metric-premium');
+                if (elPrem) elPrem.innerHTML = `${formatMoney(premiumWan)}<span class="metric-unit">万元</span>`;
+                
+                const elMargin = document.getElementById('metric-margin');
+                if (elMargin) elMargin.innerHTML = `${formatMoney(marginWan)}<span class="metric-unit">万元</span>`;
+                
+                const elClaimAmt = document.getElementById('metric-claim');
+                if (elClaimAmt) elClaimAmt.innerHTML = `${formatMoney(claimWan)}<span class="metric-unit">万元</span>`;
+                
+                const elExpAmt = document.getElementById('metric-expense');
+                if (elExpAmt) elExpAmt.innerHTML = `${formatMoney(expenseWan)}<span class="metric-unit">万元</span>`;
+
+                // 6. 异常标题
+                const alerts = [];
+                const orgName = DATA.isSingleOrgMode ? DATA.organization : '分公司';
+                if (progressRate < 95) alerts.push(orgName + '保费达成进度落后');
+                if ((summary.变动成本率 || 0) > 93) alerts.push('变动成本率异常');
+                if ((summary.满期赔付率 || 0) > 75) alerts.push('满期赔付率异常');
+                if ((summary.费用率 || 0) > 17) alerts.push('费用率异常');
+                
+                const titleEl = document.getElementById('kpi-alert-title');
+                if (titleEl) titleEl.textContent = alerts.length ? alerts.join('、') : '重点指标正常';
+
+            } catch (e) {
+                console.error('Render KPI error:', e);
+            }
+        }
+
+        renderKPI();
+        renderChart('overview');
+    </script>
+</body>
+</html>

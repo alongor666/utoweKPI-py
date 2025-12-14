@@ -1,0 +1,12 @@
+{
+  "id": "F005",
+  "name": "HTML报告生成器",
+  "status": "implemented",
+  "core_files": [
+    "src/report_generator.py",
+    "templates/四川分公司车险第49周经营分析模板.html",
+    "static/js/static-report-generator.js"
+  ],
+  "tags": ["报告生成", "模板引擎", "HTML"],
+  "description": "基于模板的HTML报告生成，支持动态数据注入和图表渲染"
+}

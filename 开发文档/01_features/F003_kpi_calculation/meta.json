@@ -1,0 +1,13 @@
+{
+  "id": "F003",
+  "name": "KPI计算引擎",
+  "status": "implemented",
+  "core_files": [
+    "src/kpi_calculator.py",
+    "reference/thresholds.json",
+    "reference/year-plans.json",
+    "static/js/static-report-generator.js"
+  ],
+  "tags": ["KPI计算", "业务指标", "算法"],
+  "description": "核心业务指标计算引擎，支持多种KPI公式和阈值告警"
+}

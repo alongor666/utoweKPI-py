@@ -1,0 +1,12 @@
+{
+  "id": "F006",
+  "name": "静态部署系统",
+  "status": "implemented",
+  "core_files": [
+    "static/index.html",
+    "static/js/static-report-generator.js",
+    ".github/workflows/deploy.yml"
+  ],
+  "tags": ["静态部署", "GitHub Pages", "CI/CD"],
+  "description": "完全静态化的部署系统，支持GitHub Pages自动部署"
+}

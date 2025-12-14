@@ -1,0 +1,11 @@
+{
+  "id": "F001",
+  "name": "CSV数据解析与处理",
+  "status": "implemented",
+  "core_files": [
+    "src/data_loader.py",
+    "static/js/static-report-generator.js"
+  ],
+  "tags": ["数据处理", "CSV解析", "前端"],
+  "description": "负责CSV文件的上传、解析和数据清洗功能"
+}
