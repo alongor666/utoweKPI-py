@@ -136,7 +136,28 @@ python3 scripts/generate_docs_index.py 开发文档
 # 5. 提交变更
 git add .
 git commit -m "更新F001功能及元数据"
+
+# 6. 推送前自动检查（通过 Git Pre-Push Hook）
+git push  # 会自动执行文档-代码一致性检查
 ```
+
+### 推送前检查机制
+
+为确保代码与文档始终一致，项目配置了 **Git Pre-Push Hook** 自动检查。
+
+**安装方法**:
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-push
+```
+
+**检查项目**:
+1. ✅ **必需**: KNOWLEDGE_INDEX.md 是否最新
+2. ⚠️ **建议**: 核心文件是否在 meta.json 中注册
+3. ⚠️ **建议**: 功能单元 updated_at 是否为今天
+4. ⚠️ **建议**: 重大变更是否记录到 DEVLOG.md
+
+详见 [推送前检查清单](./00_push_checklist.md)。
 
 ---
 
