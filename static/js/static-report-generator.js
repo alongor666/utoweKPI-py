@@ -131,7 +131,9 @@ class StaticReportGenerator {
         <html>
         <head>
             <title>经营分析报告</title>
-            <script src="./assets/echarts.min.js"></script>
+            <script src="https://lib.baomitu.com/echarts/5.4.3/echarts.min.js" onerror="this.remove()"></script>
+            <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js" onerror="this.remove()"></script>
+            <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
         </head>
         <body>
             <h1>经营分析报告</h1>
