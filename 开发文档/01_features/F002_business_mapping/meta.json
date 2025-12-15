@@ -8,5 +8,8 @@
     "static/js/static-report-generator.js"
   ],
   "tags": ["数据映射", "业务逻辑", "配置化"],
-  "description": "将原始业务类型映射为标准分类，支持灵活的配置管理"
+  "description": "将原始业务类型映射为标准分类，支持灵活的配置管理",
+  "updated_at": "2025-12-15",
+  "dependencies": ["F001"],
+  "related_decisions": []
 }

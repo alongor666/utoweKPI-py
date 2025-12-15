@@ -1,0 +1,58 @@
+[
+  {
+    "file": "kpi_calculator.py",
+    "type": "function",
+    "name": "safe_divide",
+    "signature": "def safe_divide(self, numerator, denominator)",
+    "docstring": "安全除法，分母为0返回0",
+    "extracted_at": "2025-12-15T14:14:27.981171"
+  },
+  {
+    "file": "kpi_calculator.py",
+    "type": "function",
+    "name": "calculate_kpis",
+    "signature": "def calculate_kpis(self, df, manual_plan=None)",
+    "docstring": "计算给定 DataFrame 的所有核心 KPI。",
+    "extracted_at": "2025-12-15T14:14:27.981195"
+  },
+  {
+    "file": "mapper.py",
+    "type": "function",
+    "name": "_build_canonical_map",
+    "signature": "def _build_canonical_map(self)",
+    "docstring": "构建标准名称到详细信息的映射",
+    "extracted_at": "2025-12-15T14:14:27.981278"
+  },
+  {
+    "file": "mapper.py",
+    "type": "function",
+    "name": "_build_compatibility_map",
+    "signature": "def _build_compatibility_map(self)",
+    "docstring": "构建兼容性映射",
+    "extracted_at": "2025-12-15T14:14:27.981287"
+  },
+  {
+    "file": "mapper.py",
+    "type": "function",
+    "name": "map_business_type",
+    "signature": "def map_business_type(self, raw_value)",
+    "docstring": "根据原始值返回标准化的业务类型信息。\n        返回字典: {'ui_full_name', 'ui_short_label', 'category', ...}",
+    "extracted_at": "2025-12-15T14:14:27.981295"
+  },
+  {
+    "file": "data_loader.py",
+    "type": "function",
+    "name": "load_data",
+    "signature": "def load_data(self)",
+    "docstring": "加载 CSV 文件并进行基本的类型转换。",
+    "extracted_at": "2025-12-15T14:14:27.981354"
+  },
+  {
+    "file": "report_generator.py",
+    "type": "function",
+    "name": "_detect_problems",
+    "signature": "def _detect_problems(self, org_data)",
+    "docstring": "基于阈值检测异常",
+    "extracted_at": "2025-12-15T14:14:27.981456"
+  }
+]

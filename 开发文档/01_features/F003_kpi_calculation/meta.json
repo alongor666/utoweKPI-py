@@ -9,5 +9,8 @@
     "static/js/static-report-generator.js"
   ],
   "tags": ["KPI计算", "业务指标", "算法"],
-  "description": "核心业务指标计算引擎，支持多种KPI公式和阈值告警"
+  "description": "核心业务指标计算引擎，支持多种KPI公式和阈值告警",
+  "updated_at": "2025-12-15",
+  "dependencies": ["F001", "F002"],
+  "related_decisions": []
 }

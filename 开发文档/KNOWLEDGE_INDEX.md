@@ -1,7 +1,7 @@
 # 知识体系全景导航 (Knowledge System Panorama)
 
 > **自动生成**: 由 `scripts/generate_docs_index.py` 动态构建
-> **更新时间**: 2025-12-14 11:03:00
+> **更新时间**: 2025-12-15 14:20:02
 
 ---
 
@@ -14,7 +14,7 @@
 | [F003](./开发文档/01_features/F003_kpi_calculation/README.md) | KPI计算引擎 | ✅ implemented | KPI计算, 业务指标, 算法 | `src/kpi_calculator.py`, `reference/thresholds.json`, `reference/year-plans.json` ... (+1) |
 | [F004](./开发文档/01_features/F004_data_aggregation/README.md) | 数据聚合与统计 | ✅ implemented | 数据聚合, 统计分析, 多维分析 | `src/kpi_calculator.py`, `static/js/static-report-generator.js` |
 | [F005](./开发文档/01_features/F005_report_generation/README.md) | HTML报告生成器 | ✅ implemented | 报告生成, 模板引擎, HTML | `src/report_generator.py`, `templates/四川分公司车险第49周经营分析模板.html`, `static/js/static-report-generator.js` |
-| [F006](./开发文档/01_features/F006_static_deployment/README.md) | 静态部署系统 | ✅ implemented | 静态部署, GitHub Pages, CI/CD | `static/index.html`, `static/js/static-report-generator.js`, `.github/workflows/deploy.yml` |
+| [F006](./开发文档/01_features/F006_static_deployment/README.md) | 静态部署系统 | ✅ implemented | 静态部署, GitHub Pages, SPA, UI优化 | `static/index.html`, `static/js/static-report-generator.js`, `static/templates/四川分公司车险第49周经营分析模板.html` ... (+1) |
 
 ## 📊 状态概览
 
@@ -36,13 +36,9 @@
   - 标签: `报告生成`, `模板引擎`, `HTML`
 
 - **[F006](开发文档/01_features/F006_static_deployment/README.md)**: 静态部署系统
-  - 标签: `静态部署`, `GitHub Pages`, `CI/CD`
+  - 标签: `静态部署`, `GitHub Pages`, `SPA`, `UI优化`
 
 ## 🏷️ 标签索引
-
-### `CI/CD` (1)
-
-- **[F006](开发文档/01_features/F006_static_deployment/README.md)**: 静态部署系统
 
 ### `CSV解析` (1)
 
@@ -59,6 +55,14 @@
 ### `KPI计算` (1)
 
 - **[F003](开发文档/01_features/F003_kpi_calculation/README.md)**: KPI计算引擎
+
+### `SPA` (1)
+
+- **[F006](开发文档/01_features/F006_static_deployment/README.md)**: 静态部署系统
+
+### `UI优化` (1)
+
+- **[F006](开发文档/01_features/F006_static_deployment/README.md)**: 静态部署系统
 
 ### `业务指标` (1)
 

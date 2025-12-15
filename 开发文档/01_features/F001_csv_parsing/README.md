@@ -22,6 +22,7 @@
 2. **错误处理**: 详细的解析错误提示和行号定位
 3. **大文件支持**: 流式处理，避免内存溢出
 4. **数据验证**: 字段类型检查和格式验证
+5. **CSV缓存机制**: 解析后缓存数据，避免重复读取File对象（v2.0新增）
 
 ## 依赖关系
 
@@ -60,6 +61,30 @@ class StaticReportGenerator {
 - Papa Parse库版本更新兼容性
 - 新增数据类型的解析支持
 - 错误提示信息的本地化
+
+### CSV缓存机制详解（2025-12-15新增）
+
+**问题背景**：
+- 文件上传后先解析一次用于元数据预览
+- 生成报告时再次尝试解析同一File对象
+- File对象的FileReader只能读取一次，导致 "Too few fields" 错误
+
+**解决方案**（static/index.html:250-253）：
+```javascript
+let cachedCsvData = null;      // 缓存解析后的CSV数据
+let cachedGenerator = null;    // 缓存生成器实例
+let cachedMetadata = null;     // 缓存元数据
+```
+
+**工作流程**：
+1. 文件选择时：解析CSV → 缓存数据 → 显示元数据预览
+2. 生成报告时：直接使用 `cachedCsvData`，调用 `processData()` 和 `generateHTML()`
+3. 避免重复调用 `parseCSV(file)`
+
+**性能优化**：
+- 减少文件读取次数（从2次降为1次）
+- 提高报告生成速度（跳过解析环节）
+- 改善用户体验（即时响应）
 
 ---
 

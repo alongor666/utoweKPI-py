@@ -5,8 +5,12 @@
   "core_files": [
     "static/index.html",
     "static/js/static-report-generator.js",
+    "static/templates/四川分公司车险第49周经营分析模板.html",
     ".github/workflows/deploy.yml"
   ],
-  "tags": ["静态部署", "GitHub Pages", "CI/CD"],
-  "description": "完全静态化的部署系统，支持GitHub Pages自动部署"
+  "tags": ["静态部署", "GitHub Pages", "SPA", "UI优化"],
+  "description": "完全静态化的部署系统，支持单页应用模式与GitHub Pages自动部署",
+  "updated_at": "2025-12-15",
+  "dependencies": ["F001", "F002", "F003", "F004"],
+  "related_decisions": ["D001_ECharts-CDN加载优化.md"]
 }

@@ -7,5 +7,8 @@
     "static/js/static-report-generator.js"
   ],
   "tags": ["数据聚合", "统计分析", "多维分析"],
-  "description": "多维度数据聚合统计，支持按业务类型、时间等维度汇总"
+  "description": "多维度数据聚合统计，支持按业务类型、时间等维度汇总",
+  "updated_at": "2025-12-15",
+  "dependencies": ["F001", "F002", "F003"],
+  "related_decisions": []
 }

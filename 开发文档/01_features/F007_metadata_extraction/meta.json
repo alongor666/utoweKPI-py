@@ -1,0 +1,14 @@
+{
+  "id": "F007",
+  "name": "智能元数据提取与分析模式识别",
+  "status": "implemented",
+  "core_files": [
+    "static/js/static-report-generator.js",
+    "static/index.html"
+  ],
+  "tags": ["元数据提取", "智能识别", "字段映射", "分析模式", "前端"],
+  "description": "从CSV数据中智能提取元数据（周次、年度、日期、机构等），支持中英文字段自动映射，并根据三级机构数量自动识别单机构/多机构分析模式",
+  "updated_at": "2025-12-15",
+  "dependencies": ["F001"],
+  "related_decisions": []
+}

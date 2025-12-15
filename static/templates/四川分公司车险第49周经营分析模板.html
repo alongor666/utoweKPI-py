@@ -1306,9 +1306,9 @@
             } else if (variableCostRate < 88) {
                 return '#92d050'; // 优秀 - 浅绿
             } else if (variableCostRate < 91) {
-                return '#ffc000'; // 健康 - 黄色
+                return '#0070c0'; // 健康 - 蓝色
             } else if (variableCostRate < 94) {
-                return '#ff8c00'; // 预警 - 橙色
+                return '#ffc000'; // 预警 - 黄色
             } else {
                 return '#c00000'; // 危险 - 红色
             }
@@ -1399,41 +1399,37 @@
          * 获取指标值的颜色
          * 正向指标：值越大颜色越绿（越好）
          * 逆向指标：值越大颜色越红（越差）
+         * 统一使用5级状态颜色（文字颜色）
          */
         function getIndicatorColor(indicatorName, value, allValues) {
+            // 如果是变动成本率，直接使用统一的状态颜色规则（绝对阈值）
+            if (indicatorName === '变动成本率') {
+                return getStatusColor(value);
+            }
+
             // 定义正向和逆向指标
             const positiveIndicators = ['边际贡献率', '年计划达成率'];
-            const negativeIndicators = ['变动成本率', '费用率', '满期赔付率', '出险率', '案均赔款'];
-
+            
             const isPositive = positiveIndicators.includes(indicatorName);
             const intensity = getIndicatorColorIntensity(indicatorName, value, allValues, isPositive);
 
-            // 对于正向指标，使用绿色系（值越大越好）
-            if (isPositive) {
-                if (intensity < 0.2) {
-                    return '#ffe6e6'; // 最差 - 浅红
-                } else if (intensity < 0.4) {
-                    return '#fff9e6'; // 较差 - 浅黄
-                } else if (intensity < 0.6) {
-                    return '#e6ffe6'; // 中等 - 浅绿
-                } else if (intensity < 0.8) {
-                    return '#b3ffb3'; // 较好 - 中绿
-                } else {
-                    return '#66ff66'; // 最好 - 深绿
-                }
+            // 根据强度（0-1，越大越好）映射到5级状态颜色
+            // 卓越深绿: #00b050 (0.8-1.0)
+            // 优秀绿: #92d050 (0.6-0.8)
+            // 健康蓝: #0070c0 (0.4-0.6)
+            // 预警黄: #ffc000 (0.2-0.4)
+            // 危险红: #c00000 (0.0-0.2)
+            
+            if (intensity < 0.2) {
+                return '#c00000'; // 危险 - 红色
+            } else if (intensity < 0.4) {
+                return '#ffc000'; // 预警 - 黄色
+            } else if (intensity < 0.6) {
+                return '#0070c0'; // 健康 - 蓝色
+            } else if (intensity < 0.8) {
+                return '#92d050'; // 优秀 - 浅绿
             } else {
-                // 对于逆向指标，使用红色系（值越大越差）
-                if (intensity < 0.2) {
-                    return '#e6ffe6'; // 最好 - 浅绿
-                } else if (intensity < 0.4) {
-                    return '#fff9e6'; // 较好 - 浅黄
-                } else if (intensity < 0.6) {
-                    return '#ffe6e6'; // 中等 - 浅红
-                } else if (intensity < 0.8) {
-                    return '#ffb3b3'; // 较差 - 中红
-                } else {
-                    return '#ff8080'; // 最差 - 深红
-                }
+                return '#00b050'; // 卓越 - 深绿
             }
         }
 
@@ -1467,7 +1463,7 @@
                     const isPercentage = ['变动成本率', '费用率', '满期赔付率', '出险率', '年计划达成率', '边际贡献率'].includes(indicator);
                     const displayValue = isPercentage ? `${value.toFixed(1)}%` : Math.round(value).toLocaleString();
 
-                    html += `<td style="padding: 8px; border: 1px solid #ddd; background-color: ${color}; font-weight: bold;">${displayValue}</td>`;
+                    html += `<td style="padding: 8px; border: 1px solid #ddd; color: ${color}; font-weight: bold;">${displayValue}</td>`;
                 });
 
                 html += '</tr>';
@@ -1858,10 +1854,13 @@
                                 })),
                                 label: {
                                     show: true,
-                                    position: 'right',
-                                    formatter: params => `${params.data.name} ${params.data.value[3].toFixed(0)}%`,
+                                    position: 'inside',
+                                    formatter: params => `${params.data.name} ${params.data.value[3].toFixed(1)}%`,
                                     fontSize: 10,
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
+                                    color: 'white',
+                                    textBorderColor: 'black',
+                                    textBorderWidth: 2
                                 },
                                 labelLayout: { hideOverlap: true },
                                 markLine: {
@@ -1917,8 +1916,7 @@
                                 data: sortedData.map(d => ({
                                     value: parseFloat(d.变动成本率.toFixed(1)),
                                     itemStyle: {
-                                        color: d.变动成本率 > 95 ? '#c00000' :
-                                               d.变动成本率 > 85 ? '#ffc000' : '#00b050'
+                                        color: getStatusColor(d.变动成本率)
                                     }
                                 })),
                                 label: {
@@ -1989,10 +1987,13 @@
                             })),
                             label: {
                                 show: true,
-                                position: 'right',
-                                formatter: params => `${params.data.name} ${params.data.value[2].toFixed(0)}%`,
+                                position: 'inside',
+                                formatter: params => `${params.data.name} ${params.data.value[2].toFixed(1)}%`,
                                 fontSize: 10,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                color: 'white',
+                                textBorderColor: 'black',
+                                textBorderWidth: 2
                             },
                             labelLayout: { hideOverlap: true },
                             markLine: {
@@ -2051,7 +2052,7 @@
                             data: premiumData.map(d => ({
                                 value: d.年计划达成率,
                                 itemStyle: {
-                                    color: d.年计划达成率 < 100 ? '#c00000' : '#00b050'
+                                    color: getStatusColor(d.变动成本率)
                                 }
                             })),
                             label: {
@@ -2115,7 +2116,7 @@
                                 type: 'bar',
                                 data: sortedData.map(d => ({
                                     value: Math.round(d.签单保费/10000),
-                                    itemStyle: { color: '#a02724' }
+                                    itemStyle: { color: getStatusColor(d.变动成本率) }
                                 })),
                                 label: {
                                     show: true,
@@ -2186,10 +2187,13 @@
                                 })),
                                 label: {
                                     show: true,
-                                    position: 'right',
-                                    formatter: params => `${params.data.name} ${params.data.value[2].toFixed(0)}%`,
+                                    position: 'inside',
+                                    formatter: params => `${params.data.name} ${params.data.value[2].toFixed(1)}%`,
                                     fontSize: 10,
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
+                                    color: 'white',
+                                    textBorderColor: 'black',
+                                    textBorderWidth: 2
                                 },
                                 labelLayout: { hideOverlap: true },
                                 markLine: {
@@ -2257,10 +2261,13 @@
                                 })),
                                 label: {
                                     show: true,
-                                    position: 'right',
-                                    formatter: params => `${params.data.name} ${params.data.value[2].toFixed(0)}%`,
+                                    position: 'inside',
+                                    formatter: params => `${params.data.name} ${params.data.value[2].toFixed(1)}%`,
                                     fontSize: 10,
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
+                                    color: 'white',
+                                    textBorderColor: 'black',
+                                    textBorderWidth: 2
                                 },
                                 labelLayout: { hideOverlap: true },
                                 markLine: {
@@ -2342,10 +2349,13 @@
                             }),
                             label: {
                                 show: true,
-                                position: 'right',
-                                formatter: params => `${params.data.name} ${params.data.value[5].toFixed(0)}%`,
+                                position: 'inside',
+                                formatter: params => `${params.data.name} ${params.data.value[5].toFixed(1)}%`,
                                 fontSize: 10,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                color: 'white',
+                                textBorderColor: 'black',
+                                textBorderWidth: 2
                             },
                             labelLayout: { hideOverlap: true },
                             markLine: {
@@ -2394,8 +2404,10 @@
                             {
                                 name: '签单保费',
                                 type: 'bar',
-                                data: sortedData.map(d => Math.round(d.签单保费 / 10000)),
-                                itemStyle: { color: '#a02724' }
+                                data: sortedData.map(d => ({
+                                    value: Math.round(d.签单保费 / 10000),
+                                    itemStyle: { color: getStatusColor(d.变动成本率) }
+                                })),
                             },
                             {
                                 name: '变动成本率',
