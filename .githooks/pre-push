@@ -1,0 +1,153 @@
+#!/bin/bash
+# Git Pre-Push Hook: 文档-代码一致性检查
+# 安装方法: git config core.hooksPath .githooks
+
+set -e
+
+echo "🔍 执行文档-代码一致性检查..."
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# 检查计数器
+ERRORS=0
+WARNINGS=0
+
+# ============================================
+# 1. 检查 KNOWLEDGE_INDEX.md 是否为最新
+# ============================================
+echo -e "\n${YELLOW}[检查1]${NC} 验证知识库索引是否最新..."
+
+# 获取最后修改的功能单元 meta.json
+LAST_META_MODIFIED=$(find 开发文档/01_features -name "meta.json" -type f -exec stat -f "%m %N" {} \; 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+INDEX_MODIFIED=$(stat -f "%m" 开发文档/KNOWLEDGE_INDEX.md 2>/dev/null || echo 0)
+
+if [ -n "$LAST_META_MODIFIED" ]; then
+    META_TIME=$(stat -f "%m" "$LAST_META_MODIFIED" 2>/dev/null || echo 0)
+
+    if [ "$META_TIME" -gt "$INDEX_MODIFIED" ]; then
+        echo -e "${RED}✗ KNOWLEDGE_INDEX.md 未更新！${NC}"
+        echo -e "  请运行: ${GREEN}python3 scripts/generate_docs_index.py 开发文档${NC}"
+        ERRORS=$((ERRORS + 1))
+    else
+        echo -e "${GREEN}✓ 知识库索引已最新${NC}"
+    fi
+fi
+
+# ============================================
+# 2. 检查修改的核心文件是否在 meta.json 中注册
+# ============================================
+echo -e "\n${YELLOW}[检查2]${NC} 验证核心文件注册情况..."
+
+# 获取本次提交修改的文件
+CHANGED_FILES=$(git diff --name-only HEAD origin/main 2>/dev/null || git diff --name-only --cached)
+
+# 检查关键目录的文件
+CORE_PATTERNS="^(src|static/js|static/templates)/.*\.(py|js|html)$"
+
+for file in $CHANGED_FILES; do
+    if echo "$file" | grep -qE "$CORE_PATTERNS"; then
+        # 检查该文件是否在某个 meta.json 的 core_files 中
+        REGISTERED=$(grep -r "\"$file\"" 开发文档/01_features/*/meta.json 2>/dev/null || echo "")
+
+        if [ -z "$REGISTERED" ]; then
+            echo -e "${YELLOW}⚠ 核心文件未注册: $file${NC}"
+            echo -e "  建议在相应功能单元的 meta.json 中添加此文件"
+            WARNINGS=$((WARNINGS + 1))
+        fi
+    fi
+done
+
+if [ $WARNINGS -eq 0 ]; then
+    echo -e "${GREEN}✓ 所有核心文件已注册${NC}"
+fi
+
+# ============================================
+# 3. 检查是否有未更新日期的 meta.json
+# ============================================
+echo -e "\n${YELLOW}[检查3]${NC} 验证功能单元更新日期..."
+
+TODAY=$(date +%Y-%m-%d)
+OLD_METAS=0
+
+for meta in 开发文档/01_features/*/meta.json; do
+    if [ -f "$meta" ]; then
+        UPDATED_AT=$(grep -o '"updated_at":[[:space:]]*"[^"]*"' "$meta" | cut -d'"' -f4)
+
+        # 检查该功能单元的文件是否被修改
+        FEATURE_DIR=$(dirname "$meta")
+        CORE_FILES=$(grep -o '"core_files":[[:space:]]*\[[^]]*\]' "$meta" | sed 's/"core_files":[[:space:]]*\[//;s/\]//;s/"//g;s/,/ /g')
+
+        for core_file in $CORE_FILES; do
+            core_file=$(echo "$core_file" | xargs) # trim
+            if echo "$CHANGED_FILES" | grep -q "^$core_file$"; then
+                if [ "$UPDATED_AT" != "$TODAY" ]; then
+                    echo -e "${YELLOW}⚠ 功能单元日期未更新: $(basename "$FEATURE_DIR")${NC}"
+                    echo -e "  文件 $core_file 已修改，但 updated_at 仍为 $UPDATED_AT"
+                    OLD_METAS=$((OLD_METAS + 1))
+                fi
+            fi
+        done
+    fi
+done
+
+if [ $OLD_METAS -eq 0 ]; then
+    echo -e "${GREEN}✓ 功能单元日期已更新${NC}"
+else
+    WARNINGS=$((WARNINGS + OLD_METAS))
+fi
+
+# ============================================
+# 4. 检查重大变更是否有开发记录
+# ============================================
+echo -e "\n${YELLOW}[检查4]${NC} 验证开发记录..."
+
+# 统计修改的代码行数
+LINES_CHANGED=$(git diff --stat HEAD origin/main 2>/dev/null | tail -1 | grep -o '[0-9]* insertion' | grep -o '[0-9]*' || echo 0)
+
+if [ "$LINES_CHANGED" -gt 100 ]; then
+    DEVLOG_MODIFIED=$(stat -f "%m" 开发文档/reports/DEVLOG.md 2>/dev/null || echo 0)
+    LAST_COMMIT_TIME=$(git log -1 --format=%ct 2>/dev/null || echo 0)
+
+    if [ "$DEVLOG_MODIFIED" -lt "$LAST_COMMIT_TIME" ]; then
+        echo -e "${YELLOW}⚠ 重大变更（$LINES_CHANGED+ 行）未记录到 DEVLOG.md${NC}"
+        echo -e "  建议添加开发流水账记录"
+        WARNINGS=$((WARNINGS + 1))
+    else
+        echo -e "${GREEN}✓ 已记录开发日志${NC}"
+    fi
+else
+    echo -e "${GREEN}✓ 变更规模适中（$LINES_CHANGED 行）${NC}"
+fi
+
+# ============================================
+# 总结
+# ============================================
+echo -e "\n"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+if [ $ERRORS -gt 0 ]; then
+    echo -e "${RED}❌ 发现 $ERRORS 个错误，阻止推送！${NC}"
+    echo -e "请修复上述错误后重试。"
+    exit 1
+elif [ $WARNINGS -gt 0 ]; then
+    echo -e "${YELLOW}⚠️  发现 $WARNINGS 个警告${NC}"
+    echo -e "建议修复后再推送，或使用 ${GREEN}git push --no-verify${NC} 跳过检查"
+    echo ""
+    read -p "是否继续推送？(y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "已取消推送"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}✅ 所有检查通过！${NC}"
+fi
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+exit 0
