@@ -1293,6 +1293,192 @@
   "organization": "四川"
 };
 
+        // ==================== 气泡图优化辅助函数 ====================
+
+        /**
+         * 根据变动成本率获取对应的状态颜色（5级）
+         * 卓越 < 85%, 优秀 85-88%, 健康 88-91%, 预警 91-94%, 危险 94-97%+
+         */
+        function getStatusColor(variableCostRate) {
+            if (variableCostRate < 85) {
+                return '#00b050'; // 卓越 - 深绿
+            } else if (variableCostRate < 88) {
+                return '#92d050'; // 优秀 - 浅绿
+            } else if (variableCostRate < 91) {
+                return '#ffc000'; // 健康 - 黄色
+            } else if (variableCostRate < 94) {
+                return '#ff8c00'; // 预警 - 橙色
+            } else {
+                return '#c00000'; // 危险 - 红色
+            }
+        }
+
+        /**
+         * 根据变动成本率获取状态名称
+         */
+        function getStatusName(variableCostRate) {
+            if (variableCostRate < 85) return '卓越';
+            else if (variableCostRate < 88) return '优秀';
+            else if (variableCostRate < 91) return '健康';
+            else if (variableCostRate < 94) return '预警';
+            else return '危险';
+        }
+
+        /**
+         * 计算气泡大小，确保：
+         * 1. 最小气泡直径最多是最大气泡的1/2
+         * 2. 限制最大气泡大小（maxSize）
+         * 3. 技术性压缩（使用平方根缩放）
+         */
+        function calculateBubbleSize(values, dataIndex) {
+            // 获取所有值
+            const allValues = values.map(v => v || 0);
+            const currentValue = allValues[dataIndex] || 0;
+
+            // 计算最大最小值
+            const maxValue = Math.max(...allValues);
+            const minValue = Math.min(...allValues.filter(v => v > 0)); // 排除0值
+
+            // 配置参数
+            const maxSize = 50; // 最大气泡大小
+            const minSize = maxSize / 2; // 最小气泡大小（最大的1/2）
+
+            // 避免除以0
+            if (maxValue === 0 || maxValue === minValue) {
+                return maxSize;
+            }
+
+            // 使用平方根进行技术性压缩，使差异更温和
+            const normalizedValue = Math.sqrt(currentValue / maxValue);
+
+            // 映射到 [minSize, maxSize] 范围
+            const size = minSize + (maxSize - minSize) * normalizedValue;
+
+            return Math.max(minSize, Math.min(maxSize, size));
+        }
+
+        /**
+         * 为数据数组创建气泡大小计算函数
+         */
+        function createBubbleSizeCalculator(data, valueField) {
+            const values = data.map(d => d[valueField] || 0);
+            return (d) => {
+                const index = data.findIndex(item => item === d);
+                return calculateBubbleSize(values, index);
+            };
+        }
+
+        /**
+         * 根据指标类型和值获取颜色强度
+         * @param {string} indicatorName - 指标名称
+         * @param {number} value - 指标值
+         * @param {Array} allValues - 所有值的数组
+         * @param {boolean} isPositive - 是否为正向指标
+         */
+        function getIndicatorColorIntensity(indicatorName, value, allValues, isPositive) {
+            if (!allValues || allValues.length === 0) return 0;
+
+            const maxValue = Math.max(...allValues);
+            const minValue = Math.min(...allValues);
+
+            if (maxValue === minValue) return 0.5; // 所有值相同时返回中间色
+
+            // 计算归一化位置 (0-1)
+            let normalizedPosition = (value - minValue) / (maxValue - minValue);
+
+            // 对于逆向指标，反转位置（值越大，颜色越浅）
+            if (!isPositive) {
+                normalizedPosition = 1 - normalizedPosition;
+            }
+
+            return normalizedPosition;
+        }
+
+        /**
+         * 获取指标值的颜色
+         * 正向指标：值越大颜色越绿（越好）
+         * 逆向指标：值越大颜色越红（越差）
+         */
+        function getIndicatorColor(indicatorName, value, allValues) {
+            // 定义正向和逆向指标
+            const positiveIndicators = ['边际贡献率', '年计划达成率'];
+            const negativeIndicators = ['变动成本率', '费用率', '满期赔付率', '出险率', '案均赔款'];
+
+            const isPositive = positiveIndicators.includes(indicatorName);
+            const intensity = getIndicatorColorIntensity(indicatorName, value, allValues, isPositive);
+
+            // 对于正向指标，使用绿色系（值越大越好）
+            if (isPositive) {
+                if (intensity < 0.2) {
+                    return '#ffe6e6'; // 最差 - 浅红
+                } else if (intensity < 0.4) {
+                    return '#fff9e6'; // 较差 - 浅黄
+                } else if (intensity < 0.6) {
+                    return '#e6ffe6'; // 中等 - 浅绿
+                } else if (intensity < 0.8) {
+                    return '#b3ffb3'; // 较好 - 中绿
+                } else {
+                    return '#66ff66'; // 最好 - 深绿
+                }
+            } else {
+                // 对于逆向指标，使用红色系（值越大越差）
+                if (intensity < 0.2) {
+                    return '#e6ffe6'; // 最好 - 浅绿
+                } else if (intensity < 0.4) {
+                    return '#fff9e6'; // 较好 - 浅黄
+                } else if (intensity < 0.6) {
+                    return '#ffe6e6'; // 中等 - 浅红
+                } else if (intensity < 0.8) {
+                    return '#ffb3b3'; // 较差 - 中红
+                } else {
+                    return '#ff8080'; // 最差 - 深红
+                }
+            }
+        }
+
+        /**
+         * 生成气泡图下方的指标表格HTML
+         */
+        function generateIndicatorTable(data, dimField, indicators) {
+            if (!data || data.length === 0) return '';
+
+            let html = '<div class="indicator-table-container" style="margin-top: 20px; overflow-x: auto;">';
+            html += '<table class="indicator-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">';
+
+            // 表头
+            html += '<thead><tr style="background-color: #f5f5f5;">';
+            html += `<th style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${dimField}</th>`;
+            indicators.forEach(indicator => {
+                html += `<th style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">${indicator}</th>`;
+            });
+            html += '</tr></thead>';
+
+            // 表体
+            html += '<tbody>';
+            data.forEach(d => {
+                html += '<tr>';
+                html += `<td style="padding: 8px; border: 1px solid #ddd;">${d[dimField]}</td>`;
+
+                indicators.forEach(indicator => {
+                    const value = d[indicator];
+                    const allValues = data.map(item => item[indicator]);
+                    const color = getIndicatorColor(indicator, value, allValues);
+                    const isPercentage = ['变动成本率', '费用率', '满期赔付率', '出险率', '年计划达成率', '边际贡献率'].includes(indicator);
+                    const displayValue = isPercentage ? `${value.toFixed(1)}%` : Math.round(value).toLocaleString();
+
+                    html += `<td style="padding: 8px; border: 1px solid #ddd; background-color: ${color}; font-weight: bold;">${displayValue}</td>`;
+                });
+
+                html += '</tr>';
+            });
+            html += '</tbody>';
+
+            html += '</table>';
+            html += '</div>';
+
+            return html;
+        }
+
         // 当前维度
         let currentDimensions = {
             overview: 'kpi',
@@ -1656,12 +1842,17 @@
                             },
                             series: [{
                                 type: 'scatter',
-                                symbolSize: d => Math.max(d[3] * 0.8, 10),
+                                symbolSize: (value, params) => {
+                                    const filteredData = data.filter(d => d.年计划达成率);
+                                    const values = filteredData.map(d => d.签单保费 || 0);
+                                    const dataIndex = params.dataIndex;
+                                    return calculateBubbleSize(values, dataIndex);
+                                },
                                 data: data.filter(d => d.年计划达成率).map(d => ({
                                     name: d[dimField],
                                     value: [d.年计划达成率, d.变动成本率, d.签单保费, d.变动成本率],
                                     itemStyle: {
-                                        color: d.变动成本率 > 95 ? '#c00000' : '#00b050'
+                                        color: getStatusColor(d.变动成本率)
                                     }
                                 })),
                                 label: {
@@ -1783,12 +1974,16 @@
                         },
                         series: [{
                             type: 'scatter',
-                            symbolSize: d => Math.max(d[2] * 0.8, 10),
+                            symbolSize: (value, params) => {
+                                const values = data.map(d => d.签单保费 || 0);
+                                const dataIndex = params.dataIndex;
+                                return calculateBubbleSize(values, dataIndex);
+                            },
                             data: data.map(d => ({
                                 name: d[dimField],
                                 value: [d.满期赔付率, d.费用率, d.变动成本率, d.保费占比],
                                 itemStyle: {
-                                    color: d.变动成本率 > 95 ? '#c00000' : '#00b050'
+                                    color: getStatusColor(d.变动成本率)
                                 }
                             })),
                             label: {
@@ -1975,13 +2170,16 @@
                             },
                             series: [{
                                 type: 'scatter',
-                                symbolSize: d => Math.max(d[2] * 0.8, 10),
+                                symbolSize: (value, params) => {
+                                    const values = data.map(d => d.签单保费 || 0);
+                                    const dataIndex = params.dataIndex;
+                                    return calculateBubbleSize(values, dataIndex);
+                                },
                                 data: data.map(d => ({
                                     name: d[dimField],
                                     value: [d.满期赔付率, d.已报告赔款占比, d.变动成本率, d.签单保费],
                                     itemStyle: {
-                                        color: d.满期赔付率 > 75 ? '#c00000' :
-                                               d.满期赔付率 > 60 ? '#ffc000' : '#00b050',
+                                        color: getStatusColor(d.变动成本率),
                                         opacity: 0.7
                                     }
                                 })),
@@ -2043,12 +2241,16 @@
                             },
                             series: [{
                                 type: 'scatter',
-                                symbolSize: d => Math.max(d[2] * 0.8, 10),
+                                symbolSize: (value, params) => {
+                                    const values = data.map(d => d.签单保费 || 0);
+                                    const dataIndex = params.dataIndex;
+                                    return calculateBubbleSize(values, dataIndex);
+                                },
                                 data: data.map(d => ({
                                     name: d[dimField],
                                     value: [d.出险率, d.案均赔款, d.变动成本率, d.签单保费],
                                     itemStyle: {
-                                        color: '#1890ff',
+                                        color: getStatusColor(d.变动成本率),
                                         opacity: 0.7
                                     }
                                 })),
@@ -2115,7 +2317,11 @@
                         },
                         series: [{
                             type: 'scatter',
-                            symbolSize: d => Math.max(d[5] * 0.8, 10),
+                            symbolSize: (value, params) => {
+                                const values = data.map(d => d.签单保费 || 0);
+                                const dataIndex = params.dataIndex;
+                                return calculateBubbleSize(values, dataIndex);
+                            },
                             data: data.map(d => {
                                 // 计算费用占比（假设费用 = 签单保费 * 费用率）
                                 const totalPremium = data.reduce((sum, item) => sum + item.签单保费, 0);
@@ -2128,8 +2334,7 @@
                                     name: d[dimField],
                                     value: [d.费用率, diff, d.签单保费, expenseShare, premiumShare, d.变动成本率],
                                     itemStyle: {
-                                        color: diff > 2 ? '#c00000' :
-                                               diff > 0 ? '#ffc000' : '#00b050',
+                                        color: getStatusColor(d.变动成本率),
                                         opacity: 0.7
                                     }
                                 };
@@ -2203,6 +2408,47 @@
                 }
 
                 chart.setOption(option);
+
+                // ==================== 为气泡图添加指标表格 ====================
+                // 检查是否为气泡图（scatter类型）
+                const isBubbleChart = option.series && option.series[0] && option.series[0].type === 'scatter';
+
+                if (isBubbleChart) {
+                    // 移除旧的表格（如果存在）
+                    const oldTable = chartDom.parentElement.querySelector('.indicator-table-container');
+                    if (oldTable) {
+                        oldTable.remove();
+                    }
+
+                    // 定义每个图表对应的指标
+                    let indicators = [];
+                    if (tab === 'overview' && data.some(d => d.年计划达成率)) {
+                        // 经营概览 - 年计划达成率 vs 变动成本率
+                        indicators = ['年计划达成率', '变动成本率', '签单保费'];
+                    } else if (tab === 'cost') {
+                        // 变动成本 - 满期赔付率 vs 费用率
+                        indicators = ['满期赔付率', '费用率', '变动成本率', '签单保费'];
+                    } else if (tab === 'loss' && currentSubTab['loss'] === 'bubble') {
+                        // 损失暴露 - 满期赔付率 vs 已报告赔款占比
+                        indicators = ['满期赔付率', '已报告赔款占比', '变动成本率', '签单保费'];
+                    } else if (tab === 'loss' && currentSubTab['loss'] === 'quadrant') {
+                        // 损失暴露 - 出险率 vs 案均赔款
+                        indicators = ['出险率', '案均赔款', '变动成本率', '签单保费'];
+                    } else if (tab === 'expense') {
+                        // 费用支出
+                        indicators = ['费用率', '变动成本率', '签单保费'];
+                    }
+
+                    // 生成并插入表格
+                    if (indicators.length > 0) {
+                        const tableHtml = generateIndicatorTable(data, dimField, indicators);
+                        const tableContainer = document.createElement('div');
+                        tableContainer.innerHTML = tableHtml;
+                        chartDom.parentElement.appendChild(tableContainer.firstChild);
+                    }
+                }
+                // ==================== 表格添加完成 ====================
+
             } catch (e) {
                 console.error('Render chart error:', e);
                 const chartDom = document.getElementById(`chart-${tab}`);
