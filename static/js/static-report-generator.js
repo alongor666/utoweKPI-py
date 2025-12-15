@@ -64,28 +64,36 @@ class StaticReportGenerator {
     /**
      * 处理复杂的业务类型映射配置
      * @param {Object} complexMapping - 复杂的映射配置
-     * @returns {Object} 简化的映射对象
+     * @returns {Object} 包含ui_short_label的映射对象
      */
     processBusinessMapping(complexMapping) {
-        const simpleMapping = {};
-        
+        const mapping = {};
+
         // 处理主要业务类型
         if (complexMapping.business_types) {
             complexMapping.business_types.forEach(type => {
-                simpleMapping[type.csv_raw_value] = type.category;
+                mapping[type.csv_raw_value] = {
+                    category: type.category,
+                    ui_short_label: type.ui_short_label
+                };
             });
         }
-        
+
         // 处理兼容性映射
         if (complexMapping.compatibility_mappings) {
-            complexMapping.compatibility_mappings.forEach(mapping => {
-                simpleMapping[mapping.csv_raw_value] = 
-                    complexMapping.business_types.find(t => t.ui_full_name === mapping.maps_to)?.category || "其他";
+            complexMapping.compatibility_mappings.forEach(compatMapping => {
+                const canonical = complexMapping.business_types.find(
+                    t => t.ui_full_name === compatMapping.maps_to
+                );
+                mapping[compatMapping.csv_raw_value] = {
+                    category: canonical?.category || "其他",
+                    ui_short_label: canonical?.ui_short_label || compatMapping.csv_raw_value
+                };
             });
         }
-        
-        console.log('业务映射处理完成:', simpleMapping);
-        return simpleMapping;
+
+        console.log('业务映射处理完成:', mapping);
+        return mapping;
     }
 
     /**
@@ -212,14 +220,52 @@ class StaticReportGenerator {
     }
 
     /**
-     * 将CSV原始数据转换为模板期望的DATA结构
+     * 为CSV数据添加业务类型映射字段
      * @param {Array} csvData - 原始CSV数据
-     * @returns {Object} 模板期望的数据结构
+     * @returns {Array} 添加了ui_short_label字段的数据
      */
-    transformToTemplateData(csvData) {
+    _mapBusinessTypes(csvData) {
+        return csvData.map(row => {
+            const businessType = row.business_type_category || row['业务类型分类'];
+            if (businessType && this.businessMapping && this.businessMapping[businessType]) {
+                row.ui_short_label = this.businessMapping[businessType].ui_short_label;
+                row.ui_category = this.businessMapping[businessType].category;
+            } else {
+                row.ui_short_label = businessType || '其他';
+                row.ui_category = '其他';
+            }
+            return row;
+        });
+    }
+
+    /**
+     * 加载年度计划并转换为Map
+     * @returns {Map} 机构名 -> 计划值的映射
+     */
+    _loadYearPlans() {
+        if (!this.yearPlans || !this.yearPlans['年度保费计划']) {
+            return new Map();
+        }
+
+        const planMap = new Map();
+        const plans = this.yearPlans['年度保费计划'];
+
+        for (const [orgName, premiumPlan] of Object.entries(plans)) {
+            planMap.set(orgName, { premium: premiumPlan });
+        }
+
+        return planMap;
+    }
+
+    /**
+     * 计算单个分组的所有KPI指标
+     * @param {Array} groupData - 单个分组的数据
+     * @param {Object} plan - 年度计划值（可选）
+     * @returns {Object} 包含所有KPI的对象
+     */
+    _calculateKPIsForGroup(groupData, plan = null) {
         // 字段映射（支持中英文字段名）
         const fieldMap = {
-            org: ['third_level_organization', '三级机构'],
             premium: ['signed_premium_yuan', '签单保费'],
             maturedPremium: ['matured_premium_yuan', '满期保费'],
             claim: ['reported_claim_payment_yuan', '已报告赔款'],
@@ -238,100 +284,213 @@ class StaticReportGenerator {
             return 0;
         };
 
-        // 按三级机构聚合数据
-        const orgData = {};
+        // 1. 基础聚合
+        let sum_signed_premium = 0;
+        let sum_matured_premium = 0;
+        let sum_reported_claim = 0;
+        let sum_expense = 0;
+        let sum_policy_count = 0;
+        let sum_claim_case_count = 0;
+
+        groupData.forEach(row => {
+            sum_signed_premium += getField(row, fieldMap.premium);
+            sum_matured_premium += getField(row, fieldMap.maturedPremium);
+            sum_reported_claim += getField(row, fieldMap.claim);
+            sum_expense += getField(row, fieldMap.expense);
+            sum_policy_count += getField(row, fieldMap.policyCount);
+            sum_claim_case_count += getField(row, fieldMap.claimCount);
+        });
+
+        // 2. 安全除法
+        const safeDivide = (numerator, denominator) => {
+            return (denominator === 0 || isNaN(denominator)) ? 0 : numerator / denominator;
+        };
+
+        // 3. 核心比率指标 (%)
+        // 满期赔付率 = 已报告赔款 / 满期保费 × 100
+        const claim_rate = safeDivide(sum_reported_claim, sum_matured_premium) * 100;
+
+        // 费用率 = 费用额 / 签单保费 × 100
+        const expense_rate = safeDivide(sum_expense, sum_signed_premium) * 100;
+
+        // 变动成本率 = 满期赔付率 + 费用率
+        const cost_rate = claim_rate + expense_rate;
+
+        // 出险率 = 赔案件数 / 保单件数 × 100
+        const claim_frequency = safeDivide(sum_claim_case_count, sum_policy_count) * 100;
+
+        // 案均赔款 = 已报告赔款 / 赔案件数
+        const average_claim = safeDivide(sum_reported_claim, sum_claim_case_count);
+
+        // 4. 年计划达成率
+        let achievement_rate = null;
+        if (plan && plan.premium && plan.premium > 0) {
+            // 简化版：不考虑时间进度，直接计算达成率
+            achievement_rate = safeDivide(sum_signed_premium, plan.premium) * 100;
+        }
+
+        return {
+            签单保费: sum_signed_premium,
+            满期保费: sum_matured_premium,
+            已报告赔款: sum_reported_claim,
+            费用额: sum_expense,
+            保单件数: sum_policy_count,
+            赔案件数: sum_claim_case_count,
+            满期赔付率: claim_rate,
+            费用率: expense_rate,
+            变动成本率: cost_rate,
+            出险率: claim_frequency,
+            案均赔款: average_claim,
+            年计划达成率: achievement_rate
+        };
+    }
+
+    /**
+     * 通用维度聚合方法
+     * @param {Array} csvData - 原始CSV数据
+     * @param {string} dimensionField - 聚合维度字段名
+     * @param {string} labelName - 输出标签名
+     * @param {Map} planMap - 年度计划映射（可选）
+     * @param {number} totalPremium - 全局签单保费
+     * @param {number} totalClaim - 全局已报告赔款
+     * @returns {Array} 聚合后的数据数组
+     */
+    _aggregateByDimension(csvData, dimensionField, labelName, planMap, totalPremium, totalClaim) {
+        // 按维度字段分组
+        const groups = {};
+
         csvData.forEach(row => {
-            let orgName = null;
-            for (const field of fieldMap.org) {
-                if (row[field]) {
-                    orgName = row[field];
-                    break;
-                }
+            const dimensionValue = row[dimensionField];
+            if (!dimensionValue) return;
+
+            if (!groups[dimensionValue]) {
+                groups[dimensionValue] = [];
             }
-
-            if (!orgName) return;
-
-            if (!orgData[orgName]) {
-                orgData[orgName] = {
-                    签单保费: 0,
-                    满期保费: 0,
-                    已报告赔款: 0,
-                    费用额: 0,
-                    保单件数: 0,
-                    赔案件数: 0
-                };
-            }
-
-            orgData[orgName].签单保费 += getField(row, fieldMap.premium);
-            orgData[orgName].满期保费 += getField(row, fieldMap.maturedPremium);
-            orgData[orgName].已报告赔款 += getField(row, fieldMap.claim);
-            orgData[orgName].费用额 += getField(row, fieldMap.expense);
-            orgData[orgName].保单件数 += getField(row, fieldMap.policyCount);
-            orgData[orgName].赔案件数 += getField(row, fieldMap.claimCount);
+            groups[dimensionValue].push(row);
         });
 
-        // 计算全局汇总
-        let totalPremium = 0;
-        let totalClaim = 0;
-        Object.values(orgData).forEach(org => {
-            totalPremium += org.签单保费;
-            totalClaim += org.已报告赔款;
-        });
+        // 对每个分组计算KPI
+        const results = [];
+        for (const [dimensionValue, groupData] of Object.entries(groups)) {
+            // 获取该分组的年度计划
+            const plan = planMap ? planMap.get(dimensionValue) : null;
 
-        // 转换为数组并计算KPI
-        const dataByOrg = Object.entries(orgData).map(([orgName, data]) => {
-            const 满期赔付率 = data.满期保费 > 0 ? (data.已报告赔款 / data.满期保费) * 100 : 0;
-            const 费用率 = data.签单保费 > 0 ? (data.费用额 / data.签单保费) * 100 : 0;
-            const 变动成本率 = 满期赔付率 + 费用率;
-            const 出险率 = data.保单件数 > 0 ? (data.赔案件数 / data.保单件数) * 100 : 0;
-            const 案均赔款 = data.赔案件数 > 0 ? data.已报告赔款 / data.赔案件数 : 0;
-            const 保费占比 = totalPremium > 0 ? (data.签单保费 / totalPremium) * 100 : 0;
-            const 已报告赔款占比 = totalClaim > 0 ? (data.已报告赔款 / totalClaim) * 100 : 0;
+            // 计算KPI
+            const kpis = this._calculateKPIsForGroup(groupData, plan);
 
-            return {
-                机构: orgName,
-                签单保费: data.签单保费,
-                满期保费: data.满期保费,
-                已报告赔款: data.已报告赔款,
-                费用额: data.费用额,
-                保单件数: data.保单件数,
-                赔案件数: data.赔案件数,
-                满期赔付率: 满期赔付率,
-                费用率: 费用率,
-                变动成本率: 变动成本率,
-                出险率: 出险率,
-                案均赔款: 案均赔款,
-                保费占比: 保费占比,
-                已报告赔款占比: 已报告赔款占比,
-                年计划达成率: 100  // 临时值，需要与年度计划数据关联
+            // 计算占比
+            const premium_share = totalPremium > 0 ? (kpis['签单保费'] / totalPremium * 100) : 0;
+            const claim_share = totalClaim > 0 ? (kpis['已报告赔款'] / totalClaim * 100) : 0;
+
+            // 构建结果对象
+            const item = {
+                [labelName]: dimensionValue,
+                签单保费: kpis['签单保费'],
+                满期保费: kpis['满期保费'],
+                已报告赔款: kpis['已报告赔款'],
+                费用额: kpis['费用额'],
+                保单件数: kpis['保单件数'],
+                赔案件数: kpis['赔案件数'],
+                满期赔付率: kpis['满期赔付率'],
+                费用率: kpis['费用率'],
+                变动成本率: kpis['变动成本率'],
+                出险率: kpis['出险率'],
+                案均赔款: kpis['案均赔款'],
+                保费占比: premium_share,
+                已报告赔款占比: claim_share,
+                年计划达成率: kpis['年计划达成率'] !== null ? kpis['年计划达成率'] : 100
             };
-        });
+
+            results.push(item);
+        }
 
         // 按签单保费降序排序
-        dataByOrg.sort((a, b) => b.签单保费 - a.签单保费);
+        results.sort((a, b) => b.签单保费 - a.签单保费);
 
-        // 计算全局KPI
-        const globalMaturedPremium = dataByOrg.reduce((sum, org) => sum + org.满期保费, 0);
-        const global满期赔付率 = globalMaturedPremium > 0 ? (totalClaim / globalMaturedPremium) * 100 : 0;
-        const totalExpense = dataByOrg.reduce((sum, org) => sum + org.费用额, 0);
-        const global费用率 = totalPremium > 0 ? (totalExpense / totalPremium) * 100 : 0;
-        const global变动成本率 = global满期赔付率 + global费用率;
+        return results;
+    }
 
-        // 检测问题机构
+    /**
+     * 将CSV原始数据转换为模板期望的DATA结构
+     * @param {Array} csvData - 原始CSV数据
+     * @returns {Object} 模板期望的数据结构
+     */
+    transformToTemplateData(csvData) {
+        console.log('开始数据转换，使用完整的多维度聚合逻辑');
+
+        // 1. 预处理：业务类型映射
+        const mappedData = this._mapBusinessTypes(csvData);
+        console.log('业务类型映射完成');
+
+        // 2. 计算全局统计（用于占比计算）
+        const globalKPIs = this._calculateKPIsForGroup(mappedData);
+        const totalPremium = globalKPIs['签单保费'];
+        const totalClaim = globalKPIs['已报告赔款'];
+        console.log('全局统计计算完成:', { totalPremium, totalClaim });
+
+        // 3. 加载年度计划
+        const planMap = this._loadYearPlans();
+        console.log('年度计划加载完成，计划数量:', planMap.size);
+
+        // 4. 多维度聚合
+        // 4.1 按三级机构聚合
+        const dataByOrg = this._aggregateByDimension(
+            mappedData,
+            'third_level_organization',
+            '机构',
+            planMap,
+            totalPremium,
+            totalClaim
+        );
+        console.log('三级机构聚合完成，机构数量:', dataByOrg.length);
+
+        // 4.2 按客户类别聚合
+        const dataByCategory = this._aggregateByDimension(
+            mappedData,
+            'customer_category_3',
+            '客户类别',
+            null,  // 客户类别无年度计划
+            totalPremium,
+            totalClaim
+        );
+        console.log('客户类别聚合完成，类别数量:', dataByCategory.length);
+
+        // 4.3 按业务类型聚合
+        const dataByBusinessType = this._aggregateByDimension(
+            mappedData,
+            'ui_short_label',
+            '业务类型简称',
+            null,  // 业务类型无年度计划
+            totalPremium,
+            totalClaim
+        );
+        console.log('业务类型聚合完成，类型数量:', dataByBusinessType.length);
+
+        // 5. 计算全局KPI
+        const global满期赔付率 = globalKPIs['满期赔付率'];
+        const global费用率 = globalKPIs['费用率'];
+        const global变动成本率 = globalKPIs['变动成本率'];
+
+        // 6. 检测问题机构
+        const thresholds = this.thresholds?.['问题机构识别阈值'] || {};
+        const th_cost = thresholds['变动成本率超标'] || 93;
+        const th_premium = thresholds['年保费未达标'] || 95;
+        const th_expense = thresholds['费用率超标'] || 18;
+
         const problems = [];
         dataByOrg.forEach(org => {
-            if (org.变动成本率 > 93) {
+            if (org.变动成本率 > th_cost) {
                 problems.push(`${org.机构}(成本超标)`);
-            }
-            if (org.年计划达成率 < 95) {
+            } else if (org.年计划达成率 > 0 && org.年计划达成率 < th_premium) {
                 problems.push(`${org.机构}(保费未达标)`);
             }
-            if (org.费用率 > 18) {
+            if (org.费用率 > th_expense) {
                 problems.push(`${org.机构}(费用率高)`);
             }
         });
+        console.log('问题机构检测完成，问题数量:', problems.length);
 
-        // 返回模板期望的数据结构
+        // 7. 返回模板期望的数据结构
         return {
             summary: {
                 签单保费: totalPremium,
@@ -342,9 +501,9 @@ class StaticReportGenerator {
             },
             problems: problems.slice(0, 5),  // 只显示前5个问题
             dataByOrg: dataByOrg,
-            // 临时使用相同的数据填充其他维度
-            dataByCategory: dataByOrg,
-            dataByBusinessType: dataByOrg
+            dataByCategory: dataByCategory,
+            dataByBusinessType: dataByBusinessType,
+            thresholds: this.thresholds || {}
         };
     }
 

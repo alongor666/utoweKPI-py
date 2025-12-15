@@ -12,5 +12,5 @@
   "description": "完全静态化的部署系统，支持单页应用模式与GitHub Pages自动部署，集成ECharts多源CDN加载和智能元数据提取",
   "updated_at": "2025-12-15",
   "dependencies": ["F001", "F002", "F003", "F004", "F007"],
-  "related_decisions": ["D001_ECharts-CDN加载优化.md"]
+  "related_decisions": ["D001_ECharts-CDN加载优化.md", "D002_JavaScript数据聚合逻辑对等实现.md"]
 }

@@ -7,6 +7,81 @@
 
 ## 2025-12-15
 
+### 🎯 功能完善：实现完整的多维度数据聚合逻辑（对等Python后端）
+**摘要**: 将Python后端的数据聚合逻辑完整移植到JavaScript，实现三级机构、客户类别、业务类型三个维度的数据聚合和KPI计算，解决了之前只支持机构维度的不完整实现问题。
+
+**问题背景**:
+- 当前状态：简化版的 `transformToTemplateData` 方法只支持三级机构维度聚合
+- 临时方案：`dataByCategory` 和 `dataByBusinessType` 使用了相同的机构数据
+- 数据不准确：年计划达成率固定为100%，未与 `year-plans.json` 关联
+- 用户体验：前端多维度切换功能无法正常工作
+
+**主要变更**:
+1. **修改业务类型映射处理**
+   - 更新 `processBusinessMapping` 方法（第69-97行）
+   - 返回包含 `category` 和 `ui_short_label` 的完整映射对象
+   - 支持主要业务类型和兼容性映射
+
+2. **新增 `_mapBusinessTypes` 方法**（第227-239行）
+   - 为CSV数据添加 `ui_short_label` 和 `ui_category` 字段
+   - 支持中英文字段名（`business_type_category` 和 `业务类型分类`）
+   - 处理未映射业务类型，默认为"其他"
+
+3. **新增 `_loadYearPlans` 方法**（第245-258行）
+   - 从 `this.yearPlans['年度保费计划']` 加载年度计划
+   - 转换为 Map 结构（机构名 → { premium: 数值 }）
+   - 处理缺失年度计划的情况
+
+4. **新增 `_calculateKPIsForGroup` 方法**（第266-346行）
+   - 计算单个分组的所有KPI指标（16个核心指标）
+   - 支持中英文字段名映射
+   - 核心KPI计算公式：
+     - 满期赔付率 = 已报告赔款 / 满期保费 × 100
+     - 费用率 = 费用额 / 签单保费 × 100
+     - 变动成本率 = 满期赔付率 + 费用率
+     - 出险率 = 赔案件数 / 保单件数 × 100
+     - 案均赔款 = 已报告赔款 / 赔案件数
+   - 年计划达成率计算（关联 `year-plans.json`）
+   - 安全除法处理，避免除零错误
+
+5. **新增 `_aggregateByDimension` 通用聚合方法**（第358-411行）
+   - 按指定维度字段分组数据
+   - 调用 `_calculateKPIsForGroup` 计算每组KPI
+   - 计算保费占比和赔款占比
+   - 关联年度计划（如果提供）
+   - 按签单保费降序排序
+
+6. **重构 `transformToTemplateData` 方法**（第418-508行）
+   - 流程优化：预处理 → 全局统计 → 年度计划 → 多维度聚合 → 问题检测
+   - 调用新的 `_mapBusinessTypes` 方法进行业务类型映射
+   - 调用新的 `_aggregateByDimension` 方法实现三个维度聚合：
+     - 三级机构维度（`third_level_organization` → `机构`）
+     - 客户类别维度（`customer_category_3` → `客户类别`）
+     - 业务类型维度（`ui_short_label` → `业务类型简称`）
+   - 使用阈值配置检测问题机构
+   - 添加详细的控制台日志，便于调试
+   - 返回完整的数据结构，不再使用临时复用数据
+
+**影响文件**:
+- `static/js/static-report-generator.js` [UPDATED]
+  - 修改 `processBusinessMapping` 方法（+10行）
+  - 新增 `_mapBusinessTypes` 方法（+13行）
+  - 新增 `_loadYearPlans` 方法（+14行）
+  - 新增 `_calculateKPIsForGroup` 方法（+81行）
+  - 新增 `_aggregateByDimension` 方法（+54行）
+  - 重构 `transformToTemplateData` 方法（净增加约+50行）
+  - 总计新增约 +220 行代码
+
+**验证方式**:
+- JavaScript语法检查：通过 `node --check` 验证无语法错误
+- 代码结构：遵循Python后端逻辑，确保数据一致性
+- 多维度支持：`dataByOrg`、`dataByCategory`、`dataByBusinessType` 独立聚合
+- 年计划关联：正确读取 `year-plans.json` 并计算达成率
+
+**相关决策**: D002_JavaScript数据聚合逻辑对等实现.md
+
+---
+
 ### 🚨 重大Bug修复：彻底移除硬编码数据，确保报告只显示用户上传的CSV数据
 **摘要**: 修复静态部署系统中存在的严重问题——HTML模板硬编码了703行示例数据，导致用户上传CSV后仍显示12个机构的硬编码数据而不是用户上传的实际数据。
 
