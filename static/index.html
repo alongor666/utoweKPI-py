@@ -247,6 +247,11 @@
         const metadataPreview = document.getElementById('metadataPreview');
         const metadataContent = document.getElementById('metadataContent');
 
+        // 缓存解析后的CSV数据和生成器实例
+        let cachedCsvData = null;
+        let cachedGenerator = null;
+        let cachedMetadata = null;
+
         // 文件选择处理
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -257,21 +262,30 @@
                 errorMsg.style.display = 'none';
                 metadataPreview.style.display = 'none';
 
+                // 清空缓存
+                cachedCsvData = null;
+                cachedGenerator = null;
+                cachedMetadata = null;
+
                 // 预览元数据
                 try {
-                    const generator = new StaticReportGenerator();
+                    cachedGenerator = new StaticReportGenerator();
                     await new Promise(resolve => setTimeout(resolve, 500)); // 等待配置加载
 
-                    const csvData = await generator.parseCSV(file);
-                    const metadata = generator.extractDynamicInfo(csvData);
+                    cachedCsvData = await cachedGenerator.parseCSV(file);
+                    cachedMetadata = cachedGenerator.extractDynamicInfo(cachedCsvData);
+
+                    console.log('CSV数据已缓存，行数:', cachedCsvData.length);
 
                     // 显示元数据
-                    displayMetadata(metadata);
+                    displayMetadata(cachedMetadata);
                     metadataPreview.style.display = 'block';
                     submitBtn.style.display = 'block';
                 } catch (error) {
                     console.error('元数据提取失败:', error);
-                    submitBtn.style.display = 'block';
+                    errorMsg.textContent = '文件解析失败: ' + error.message;
+                    errorMsg.style.display = 'block';
+                    submitBtn.style.display = 'none';
                 }
             }
         });
@@ -342,28 +356,35 @@
         // 表单提交处理
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const file = fileInput.files[0];
-            if (!file) return;
+
+            if (!cachedCsvData || !cachedGenerator) {
+                errorMsg.textContent = '请先选择文件';
+                errorMsg.style.display = 'block';
+                return;
+            }
 
             submitBtn.style.display = 'none';
             loading.style.display = 'block';
             errorMsg.style.display = 'none';
 
             try {
-                // 使用静态报告生成器处理文件
-                const generator = new StaticReportGenerator();
-                const reportHtml = await generator.generateReport(file);
-                
+                console.log('开始生成报告，使用缓存的CSV数据...');
+
+                // 使用缓存的数据处理
+                const processedData = cachedGenerator.processData(cachedCsvData);
+                const reportHtml = cachedGenerator.generateHTML(processedData);
+
                 // 在新窗口中显示报告
                 const newWindow = window.open();
                 newWindow.document.write(reportHtml);
                 newWindow.document.close();
-                
+
+                console.log('报告生成成功！');
+
                 // 重置界面
                 loading.style.display = 'none';
                 submitBtn.style.display = 'block';
-                
+
             } catch (error) {
                 console.error('Error:', error);
                 errorMsg.textContent = '处理文件时出错: ' + error.message;
