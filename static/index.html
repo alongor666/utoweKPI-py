@@ -147,6 +147,58 @@
             font-size: 14px;
             display: none;
         }
+
+        .metadata-preview {
+            display: none;
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+
+        .metadata-preview h3 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .metadata-item {
+            display: flex;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .metadata-label {
+            font-weight: 500;
+            color: #666;
+            min-width: 100px;
+        }
+
+        .metadata-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .mode-single {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .mode-multi {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
     </style>
 </head>
 <body>
@@ -162,8 +214,15 @@
             </div>
             
             <div class="file-info" id="fileInfo"></div>
+
+            <!-- 元数据预览区域 -->
+            <div class="metadata-preview" id="metadataPreview">
+                <h3>📊 数据信息</h3>
+                <div id="metadataContent"></div>
+            </div>
+
             <div class="error" id="errorMsg"></div>
-            
+
             <button type="submit" class="btn" id="submitBtn">生成报告</button>
             
             <div class="loading" id="loading">
@@ -185,18 +244,78 @@
         const loading = document.getElementById('loading');
         const errorMsg = document.getElementById('errorMsg');
         const icon = document.querySelector('.icon');
+        const metadataPreview = document.getElementById('metadataPreview');
+        const metadataContent = document.getElementById('metadataContent');
 
         // 文件选择处理
-        fileInput.addEventListener('change', (e) => {
+        fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 fileInfo.textContent = `已选择: ${file.name}`;
                 fileInfo.style.display = 'block';
-                submitBtn.style.display = 'block';
                 icon.textContent = '📄';
                 errorMsg.style.display = 'none';
+                metadataPreview.style.display = 'none';
+
+                // 预览元数据
+                try {
+                    const generator = new StaticReportGenerator();
+                    await new Promise(resolve => setTimeout(resolve, 500)); // 等待配置加载
+
+                    const csvData = await generator.parseCSV(file);
+                    const metadata = generator.extractDynamicInfo(csvData);
+
+                    // 显示元数据
+                    displayMetadata(metadata);
+                    metadataPreview.style.display = 'block';
+                    submitBtn.style.display = 'block';
+                } catch (error) {
+                    console.error('元数据提取失败:', error);
+                    submitBtn.style.display = 'block';
+                }
             }
         });
+
+        // 显示元数据函数
+        function displayMetadata(metadata) {
+            const modeText = metadata.analysisMode === 'single' ? '单机构分析' : '多机构对比';
+            const modeClass = metadata.analysisMode === 'single' ? 'mode-single' : 'mode-multi';
+
+            let orgDisplay = '';
+            if (metadata.analysisMode === 'single') {
+                orgDisplay = metadata.organizations[0] || '未知';
+            } else {
+                orgDisplay = `${metadata.organizationCount} 个机构 (${metadata.organizations.slice(0, 3).join(', ')}${metadata.organizationCount > 3 ? '...' : ''})`;
+            }
+
+            metadataContent.innerHTML = `
+                <div class="metadata-item">
+                    <span class="metadata-label">保单年度:</span>
+                    <span class="metadata-value">${metadata.year}</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">周次:</span>
+                    <span class="metadata-value">第 ${metadata.week} 周</span>
+                </div>
+                ${metadata.updateDate ? `
+                <div class="metadata-item">
+                    <span class="metadata-label">更新日期:</span>
+                    <span class="metadata-value">${metadata.updateDate}</span>
+                </div>
+                ` : ''}
+                <div class="metadata-item">
+                    <span class="metadata-label">分析模式:</span>
+                    <span class="metadata-value">
+                        ${modeText}
+                        <span class="mode-badge ${modeClass}">${modeText}</span>
+                    </span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">机构:</span>
+                    <span class="metadata-value">${orgDisplay}</span>
+                </div>
+            `;
+        }
 
         // 拖拽效果
         dropZone.addEventListener('dragover', (e) => {

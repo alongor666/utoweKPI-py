@@ -339,7 +339,7 @@ class StaticReportGenerator {
     }
 
     /**
-     * 从CSV数据中提取动态信息
+     * 从CSV数据中智能提取动态信息（支持中英文字段）
      * @param {Array} csvData - 原始CSV数据
      * @returns {Object} 提取的信息
      */
@@ -348,37 +348,109 @@ class StaticReportGenerator {
             return {
                 year: '2025',
                 week: '未知',
+                updateDate: null,
                 company: '四川分公司',
+                analysisMode: 'single',
+                organizationCount: 0,
+                organizations: [],
                 title: '经营分析报告'
             };
         }
 
-        // 提取年份（从保单年度字段）
+        const firstRow = csvData[0];
+
+        // 字段映射表（中英文）
+        const fieldMapping = {
+            year: ['保单年度', 'policy_start_year', '年度', '年份'],
+            week: ['周次', 'week_number', '周'],
+            date: ['snapshot_date', '快照日期', '更新日期', '统计日期'],
+            organization: ['机构', '三级机构', 'third_level_organization', '分公司', '机构名称'],
+            secondOrg: ['二级机构', 'second_level_organization']
+        };
+
+        // 智能字段查找函数
+        const findFieldValue = (possibleFields) => {
+            for (const field of possibleFields) {
+                if (firstRow[field] !== undefined && firstRow[field] !== null && firstRow[field] !== '') {
+                    return firstRow[field];
+                }
+            }
+            return null;
+        };
+
+        // 提取保单年度
         let year = '2025';
-        const yearField = csvData[0]['保单年度'] || csvData[0]['年度'] || csvData[0]['年份'];
-        if (yearField) {
-            year = String(yearField).trim();
+        const yearValue = findFieldValue(fieldMapping.year);
+        if (yearValue) {
+            year = String(yearValue).trim();
         }
 
-        // 提取周次（从周次字段）
+        // 提取周次
         let week = '未知';
-        const weekField = csvData[0]['周次'] || csvData[0]['周'] || csvData[0]['week'];
-        if (weekField) {
-            week = String(weekField).replace('第', '').replace('周', '').trim();
+        const weekValue = findFieldValue(fieldMapping.week);
+        if (weekValue) {
+            week = String(weekValue).replace('第', '').replace('周', '').trim();
         }
 
-        // 提取机构名称（从机构字段）
-        let company = '四川分公司';
-        const companyField = csvData[0]['机构'] || csvData[0]['分公司'] || csvData[0]['机构名称'];
-        if (companyField) {
-            company = String(companyField).trim();
+        // 提取更新日期
+        let updateDate = null;
+        const dateValue = findFieldValue(fieldMapping.date);
+        if (dateValue) {
+            updateDate = String(dateValue).trim();
+            // 格式化日期为 YYYY-MM-DD
+            if (updateDate.includes('T')) {
+                updateDate = updateDate.split('T')[0];
+            }
         }
+
+        // 提取并分析三级机构
+        const orgField = fieldMapping.organization.find(f => firstRow[f] !== undefined);
+        const organizations = new Set();
+
+        csvData.forEach(row => {
+            const org = row[orgField];
+            if (org && org !== '' && org !== null && org !== undefined) {
+                organizations.add(String(org).trim());
+            }
+        });
+
+        const organizationList = Array.from(organizations);
+        const organizationCount = organizationList.length;
+
+        // 判断分析模式
+        let analysisMode = 'single';  // single: 单机构分析, multi: 多机构对比
+        let company = '四川分公司';
+
+        if (organizationCount === 1) {
+            analysisMode = 'single';
+            company = organizationList[0];
+        } else if (organizationCount > 1) {
+            analysisMode = 'multi';
+            // 多机构时，尝试使用二级机构名称
+            const secondOrgValue = findFieldValue(fieldMapping.secondOrg);
+            company = secondOrgValue ? String(secondOrgValue).trim() + '分公司' : '四川分公司';
+        }
+
+        // 生成标题
+        const modeText = analysisMode === 'single' ? '' : '（多机构对比）';
+        const title = `${company}车险第${week}周经营分析${modeText}`;
 
         return {
             year: year,
             week: week,
+            updateDate: updateDate,
             company: company,
-            title: `${company}车险第${week}周经营分析`
+            analysisMode: analysisMode,
+            organizationCount: organizationCount,
+            organizations: organizationList,
+            title: title,
+            // 添加详细信息用于调试
+            detectedFields: {
+                yearField: fieldMapping.year.find(f => firstRow[f] !== undefined),
+                weekField: fieldMapping.week.find(f => firstRow[f] !== undefined),
+                dateField: fieldMapping.date.find(f => firstRow[f] !== undefined),
+                orgField: orgField
+            }
         };
     }
 
@@ -390,7 +462,13 @@ class StaticReportGenerator {
     generateHTML(data) {
         // 提取动态信息
         const dynamicInfo = this.extractDynamicInfo(data.original);
-        
+
+        // 输出元数据到控制台，方便调试
+        console.log('📊 提取的元数据:', dynamicInfo);
+        console.log(`分析模式: ${dynamicInfo.analysisMode === 'single' ? '单机构分析' : '多机构对比'}`);
+        console.log(`机构数量: ${dynamicInfo.organizationCount}`);
+        console.log(`机构列表:`, dynamicInfo.organizations);
+
         let html = this.template;
         
         // 替换动态标题信息
