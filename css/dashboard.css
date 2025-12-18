@@ -324,6 +324,95 @@ body {
     opacity: 0.9;
 }
 
+/* 摩托车模式切换样式 */
+.motorcycle-mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 16px 0 20px 0;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.motorcycle-mode-switch:hover {
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mode-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    min-width: 80px;
+}
+
+.mode-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mode-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(248, 249, 250, 0.8);
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    user-select: none;
+    position: relative;
+}
+
+.mode-option:hover {
+    background: rgba(233, 236, 239, 0.9);
+    border-color: rgba(160, 39, 36, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mode-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.mode-option input[type="radio"]:checked + .mode-icon {
+    transform: scale(1.1);
+}
+
+.mode-option input[type="radio"]:checked ~ .mode-text {
+    color: var(--primary-red);
+    font-weight: 600;
+}
+
+.mode-option:has(input:checked) {
+    background: rgba(160, 39, 36, 0.08);
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(160, 39, 36, 0.1);
+}
+
+.mode-icon {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.mode-text {
+    color: #555;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+}
+
 .chart-container {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);

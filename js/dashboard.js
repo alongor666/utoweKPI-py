@@ -492,6 +492,108 @@ const Dashboard = {
         this.renderChart(tab);
     },
 
+    // 摩托车模式切换
+    switchMotorcycleMode(mode) {
+        console.log('切换摩托车模式:', mode);
+
+        // 更新状态
+        this.filterState.motorcycleMode = mode;
+
+        // 重新应用筛选并重新渲染
+        this.applyFilters();
+    },
+
+    // 获取摩托车模式预警线配置
+    getMotorcycleModeWarningLines() {
+        const mode = this.filterState.motorcycleMode || '全部业务';
+        console.log(`[Dashboard] 获取预警线配置，当前模式: ${mode}`);
+
+        const configs = {
+            '不含摩托车': [
+                {
+                    xAxis: 15,
+                    name: '出险频度预警线',
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    label: {
+                        formatter: '预警线: 15%',
+                        fontWeight: 'bold',
+                        color: '#ffc000',
+                        fontSize: 12,
+                        position: 'insideEndTop'
+                    }
+                },
+                {
+                    yAxis: 4500,
+                    name: '案均赔款预警线',
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    label: {
+                        formatter: '预警线: 4500元',
+                        fontWeight: 'bold',
+                        color: '#ffc000',
+                        fontSize: 12,
+                        position: 'insideEndTop'
+                    }
+                }
+            ],
+            '含摩托车': [
+                {
+                    xAxis: 12,
+                    name: '出险频度预警线',
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    label: {
+                        formatter: '预警线: 12%',
+                        fontWeight: 'bold',
+                        color: '#ffc000',
+                        fontSize: 12,
+                        position: 'insideEndTop'
+                    }
+                },
+                {
+                    yAxis: 4900,
+                    name: '案均赔款预警线',
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    label: {
+                        formatter: '预警线: 4900元',
+                        fontWeight: 'bold',
+                        color: '#ffc000',
+                        fontSize: 12,
+                        position: 'insideEndTop'
+                    }
+                }
+            ],
+            '仅摩托车': [
+                {
+                    xAxis: 12,
+                    name: '出险频度预警线',
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    label: {
+                        formatter: '预警线: 12%',
+                        fontWeight: 'bold',
+                        color: '#ffc000',
+                        fontSize: 12,
+                        position: 'insideEndTop'
+                    }
+                },
+                {
+                    yAxis: 4900,
+                    name: '案均赔款预警线',
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    label: {
+                        formatter: '预警线: 4900元',
+                        fontWeight: 'bold',
+                        color: '#ffc000',
+                        fontSize: 12,
+                        position: 'insideEndTop'
+                    }
+                }
+            ]
+        };
+
+        const config = configs[mode] || configs['含摩托车'];
+        console.log(`[Dashboard] 预警线配置:`, config);
+        return config;
+    },
+
     // 渲染元数据预览卡片
     renderMetadata() {
         const info = this.data.dynamicInfo;
@@ -1142,6 +1244,12 @@ const Dashboard = {
                                 const rate = this.formatRate(p.data.value[0], 1);
                                 return `${name}\n${rate}%`;
                             }
+                        },
+                        markLine: {
+                            silent: false,
+                            symbol: 'none',
+                            lineStyle: { opacity: 0.8 },
+                            data: this.getMotorcycleModeWarningLines()
                         }
                     }]
                 };
