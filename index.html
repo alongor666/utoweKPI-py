@@ -282,6 +282,29 @@
                     <button class="sub-tab active" data-subtab="bubble" onclick="Dashboard.switchSubTab('loss', 'bubble', this)">赔付率VS占比</button>
                     <button class="sub-tab" data-subtab="quadrant" onclick="Dashboard.switchSubTab('loss', 'quadrant', this)">频度VS额度</button>
                 </div>
+
+                <!-- 摩托车模式切换 -->
+                <div class="motorcycle-mode-switch">
+                    <div class="mode-label">业务模式：</div>
+                    <div class="mode-options">
+                        <label class="mode-option">
+                            <input type="radio" name="motorcycle-mode" value="全部业务" checked onchange="Dashboard.switchMotorcycleMode('全部业务')">
+                            <span class="mode-icon">🚗</span>
+                            <span class="mode-text">全部业务</span>
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="motorcycle-mode" value="不含摩托车" onchange="Dashboard.switchMotorcycleMode('不含摩托车')">
+                            <span class="mode-icon">🏍️</span>
+                            <span class="mode-text">不含摩托车</span>
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="motorcycle-mode" value="仅摩托车" onchange="Dashboard.switchMotorcycleMode('仅摩托车')">
+                            <span class="mode-icon">🛵</span>
+                            <span class="mode-text">仅摩托车</span>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="chart-container"><div id="chart-loss" class="chart"></div></div>
             </div>
 

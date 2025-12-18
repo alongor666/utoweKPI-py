@@ -24,7 +24,8 @@ const Dashboard = {
             dimensionConfigs: [],
             applied: [],
             draft: null
-        }
+        },
+        motorcycleMode: '全部业务'  // 新增摩托车模式字段
     },
 
     init(initialData, workerInstance) {
@@ -1535,6 +1536,13 @@ const Dashboard = {
         this.filterState.time.applied = { year: null, weekStart: 1, weekEnd: 52 };
         this.filterState.drill.applied = [];
         this.filterState.drill.draft = null;
+        this.filterState.motorcycleMode = '全部业务';  // 重置摩托车模式
+
+        // Reset motorcycle mode UI
+        const motorcycleRadio = document.querySelector('input[name="motorcycle-mode"][value="全部业务"]');
+        if (motorcycleRadio) {
+            motorcycleRadio.checked = true;
+        }
 
         // Clear tags
         this.renderDrillTags();
