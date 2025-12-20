@@ -253,6 +253,12 @@
                 </div>
 
                 <div id="overview-chart-content" style="display:none;">
+                    <!-- 主题提示 -->
+                    <div id="overview-alert-title" class="section-alert-title" style="display: none;">
+                        <span class="alert-icon">⚠️</span>
+                        <span class="alert-text"></span>
+                    </div>
+
                     <!-- 动态标题 -->
                     <div id="overview-dynamic-title" class="dynamic-title" style="display: none;"></div>
 
@@ -273,6 +279,11 @@
                     <button class="dimension-btn active" onclick="Dashboard.switchDimension('premium', 'category', this)">客户类别</button>
                     <button class="dimension-btn" onclick="Dashboard.switchDimension('premium', 'businessType', this)">业务类型</button>
                 </div>
+                <!-- 主题提示 -->
+                <div id="premium-alert-title" class="section-alert-title" style="display: none;">
+                    <span class="alert-icon">⚠️</span>
+                    <span class="alert-text"></span>
+                </div>
                 <div class="chart-container"><div id="chart-premium" class="chart"></div></div>
             </div>
 
@@ -282,6 +293,11 @@
                     <button class="dimension-btn active" onclick="Dashboard.switchDimension('cost', 'org', this)">三级机构</button>
                     <button class="dimension-btn" onclick="Dashboard.switchDimension('cost', 'category', this)">客户类别</button>
                     <button class="dimension-btn" onclick="Dashboard.switchDimension('cost', 'businessType', this)">业务类型</button>
+                </div>
+                <!-- 主题提示 -->
+                <div id="cost-alert-title" class="section-alert-title" style="display: none;">
+                    <span class="alert-icon">⚠️</span>
+                    <span class="alert-text"></span>
                 </div>
                 <div class="chart-container"><div id="chart-cost" class="chart"></div></div>
             </div>
@@ -297,8 +313,11 @@
                     <button class="sub-tab active" data-subtab="bubble" onclick="Dashboard.switchSubTab('loss', 'bubble', this)">赔付率VS占比</button>
                     <button class="sub-tab" data-subtab="quadrant" onclick="Dashboard.switchSubTab('loss', 'quadrant', this)">频度VS额度</button>
                 </div>
-
-
+                <!-- 主题提示 -->
+                <div id="loss-alert-title" class="section-alert-title" style="display: none;">
+                    <span class="alert-icon">⚠️</span>
+                    <span class="alert-text"></span>
+                </div>
 
                 <div class="chart-container"><div id="chart-loss" class="chart"></div></div>
             </div>
@@ -309,6 +328,11 @@
                     <button class="dimension-btn active" onclick="Dashboard.switchDimension('expense', 'org', this)">三级机构</button>
                     <button class="dimension-btn" onclick="Dashboard.switchDimension('expense', 'category', this)">客户类别</button>
                     <button class="dimension-btn" onclick="Dashboard.switchDimension('expense', 'businessType', this)">业务类型</button>
+                </div>
+                <!-- 主题提示 -->
+                <div id="expense-alert-title" class="section-alert-title" style="display: none;">
+                    <span class="alert-icon">⚠️</span>
+                    <span class="alert-text"></span>
                 </div>
                 <div class="chart-container"><div id="chart-expense" class="chart"></div></div>
             </div>

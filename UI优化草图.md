@@ -178,26 +178,43 @@
 
 **优化方案:**
 ```javascript
-// 动态颜色映射逻辑
-function getStackedBarColor(kpiName, kpiValue) {
+/**
+ * 获取堆积柱状图颜色 - 统一状态颜色规则
+ * 规则1：正向指标（越大越好）和负向指标（越小越好）统一：值越大颜色越深
+ * 规则2：超过危险线显示红色，超过预警线显示橙色
+ */
+function getStackedBarColor(kpiName, kpiValue, isPositiveIndicator = false) {
   const thresholds = {
-    '满期赔付率': { danger: 75, warning: 70 },
-    '费用率': { danger: 17, warning: 14 },
-    '变动成本率': { danger: 94, warning: 91 }
+    '满期赔付率': { danger: 75, warning: 70, positive: false },  // 负向指标
+    '费用率': { danger: 17, warning: 14, positive: false },       // 负向指标
+    '变动成本率': { danger: 94, warning: 91, positive: false },  // 负向指标
+    '保费进度达成率': { danger: 90, warning: 95, positive: true }, // 正向指标
+    '边际贡献率': { danger: 10, warning: 15, positive: true }     // 正向指标
   };
 
   const threshold = thresholds[kpiName];
-  if (kpiValue >= threshold.danger) return '#a02724';  // 红色-危险
-  if (kpiValue >= threshold.warning) return '#ffc000'; // 黄色-警告
-  return '#00b050'; // 绿色-良好
+  if (!threshold) return '#888888'; // 默认灰色
+  
+  // 负向指标：值越大越差
+  if (!threshold.positive) {
+    if (kpiValue >= threshold.danger) return '#dc3545';    // 红色-危险
+    if (kpiValue >= threshold.warning) return '#fd7e14'; // 橙色-预警
+    return '#28a745'; // 绿色-正常
+  }
+  // 正向指标：值越小越差
+  else {
+    if (kpiValue <= threshold.danger) return '#dc3545';    // 红色-危险
+    if (kpiValue <= threshold.warning) return '#fd7e14';  // 橙色-预警
+    return '#28a745'; // 绿色-正常
+  }
 }
 ```
 
 **视觉效果:**
 ```
-100%┤ ████ 费用率 (红色=18.2%超标)
+100%┤ ████ 费用率 (红色=18.2%超过危险线17%)
  80%┤ ████
-    │ ████ 满期赔付率 (红色=71.5%超标)
+    │ ████ 满期赔付率 (红色=71.5%超过预警线70%)
  60%┤ ████
     │ (每个机构的指标根据其数值动态显示对应状态颜色)
 ```
@@ -211,21 +228,23 @@ function getStackedBarColor(kpiName, kpiValue) {
 ```
   100%┤
 满期  │
-赔付  │  赔付率阈值: 75% ────────────────────
+赔付  │  ──── 赔付率预警线 75% (黄色虚线) ────
 率  80%┤
       │
     60%┤
       │
       │
       └───┬──────────────────────────────
-         17%  (费用率阈值)
+         17%  (费用率预警线)
          费用率 →
 ```
 
 **关键改进:**
-1. 在Y轴起点处标注赔付率阈值 (75%)
-2. 在X轴起点处标注费用率阈值 (17%)
-3. 阈值值直接显示在轴刻度上，清晰可见
+1. **统一预警线格式**：所有预警线使用黄色虚线（---），文字横向显示
+2. 在Y轴起点处标注赔付率预警线 (75%)
+3. 在X轴起点处标注费用率预警线 (17%)
+4. 预警线值直接显示在线条上，清晰可见
+5. 所有文字（包括轴标签）必须横向显示，禁止竖向
 
 ### 5. 文字方向统一
 
@@ -250,7 +269,7 @@ function getStackedBarColor(kpiName, kpiValue) {
 <div class="section-alert-title">
   <span class="alert-icon">⚠️</span>
   <span class="alert-text">
-    主题: 四川保费达成落后进度、满期赔付率超预期、费用率超标
+    新都、宜宾、青羊、高新、泸州保费进度落后；新都、宜宾、青羊变动成本率超标
   </span>
 </div>
 ```
@@ -268,78 +287,156 @@ function getStackedBarColor(kpiName, kpiValue) {
 }
 ```
 
+**重要变更：每个标签页 `div` 中的文字用主题提示内容替换**
+
 **内容生成逻辑:**
 
 #### A. 经营概览 - KPI标签页
 ```javascript
 // 自动识别预警/危险状态的指标
 示例输出:
-"主题: 四川保费达成落后进度、满期赔付率超预期、费用率超标"
+"四川保费达成落后进度、满期赔付率超预期、费用率超标"
 ```
 
 #### B. 经营概览 - 三级机构标签页
 ```javascript
 // 识别保费进度落后、成本率超标的机构
 示例输出:
-"主题: 达州、资阳、德阳、自贡、天府保费进度落后；新都、宜宾、青羊变动成本率超标"
+"新都、宜宾、青羊、高新、泸州保费进度落后；新都、宜宾、青羊变动成本率超标"
 ```
 
 #### C. 经营概览 - 客户类别标签页
 ```javascript
 // 识别成本率超标的客户类型
 示例输出:
-"主题: 摩托车、非营业货车、营业出租租赁、营业货车变动成本率超标"
+"摩托车、非营业货车、营业出租租赁、营业货车变动成本率超标"
 ```
 
 #### D. 保费进度
 ```javascript
 示例输出:
-"主题: 达州、资阳、德阳、自贡、天府保费进度落后"
+"新都、宜宾、青羊、高新、泸州保费进度落后"
 ```
 
 #### E. 变动成本
 ```javascript
 示例输出:
-"主题: 新都、宜宾、青羊变动成本率超标"
+"新都、宜宾、青羊变动成本率超标"
 ```
 
 #### F. 损失暴露
 ```javascript
 示例输出:
-"主题: 青羊、新都满期赔付率超标；天府赔付频度偏高"
+"青羊、新都满期赔付率超标；天府赔付频度偏高"
 ```
 
 #### G. 费用支出
 ```javascript
 示例输出:
-"主题: 青羊、宜宾费用率超标"
+"青羊、宜宾费用率超标"
 ```
+
+**实现要求：**
+1. 每个标签页的标题div直接显示主题内容，不再包含"主题:"前缀
+2. 字体颜色、大小保持与原设计一致
+3. 主题内容根据当前筛选条件动态生成
+4. 保持⚠️图标不变
 
 ## 🎯 技术实现要点
 
-### 1. 元数据卡片隐藏
+### 1. 统一预警线格式
+**要求：** 所有预警线使用黄色虚线，文字横向显示
+```javascript
+// 统一预警线配置
+const getWarningLineConfig = (value, name) => ({
+  yAxisIndex: 0,
+  type: 'line',
+  markLine: {
+    silent: true,
+    symbol: 'none',
+    lineStyle: {
+      color: '#ffc000',  // 黄色
+      type: 'dashed',    // 虚线
+      width: 2
+    },
+    label: {
+      show: true,
+      position: 'end',
+      formatter: `${name}预警线 ${value}`,
+      color: '#ffc000',
+      fontSize: 12,
+      rotate: 0  // 确保文字横向
+    },
+    data: [{ yAxis: value }]
+  }
+});
+```
+
+### 2. 统一状态颜色规则
+**规则1：** 正向指标（越大越好）和负向指标（越小越好）统一：值越大颜色越深
+**规则2：** 超过危险线显示红色，超过预警线显示橙色
+
+```javascript
+/**
+ * 统一状态颜色函数
+ * @param {string} kpiName - 指标名称
+ * @param {number} kpiValue - 指标值
+ * @param {boolean} isPositive - 是否正向指标（默认false负向）
+ */
+function getUnifiedStatusColor(kpiName, kpiValue, isPositive = false) {
+  const thresholds = {
+    '满期赔付率': { danger: 75, warning: 70, positive: false },
+    '费用率': { danger: 17, warning: 14, positive: false },
+    '变动成本率': { danger: 94, warning: 91, positive: false },
+    '保费进度达成率': { danger: 90, warning: 95, positive: true },
+    '边际贡献率': { danger: 10, warning: 15, positive: true }
+  };
+
+  const threshold = thresholds[kpiName];
+  if (!threshold) return '#888888'; // 默认灰色
+  
+  // 负向指标：值越大越差（赔付率、费用率等）
+  if (!threshold.positive) {
+    if (kpiValue >= threshold.danger) return '#dc3545';    // 红色-危险
+    if (kpiValue >= threshold.warning) return '#fd7e14'; // 橙色-预警
+    return '#28a745'; // 绿色-正常
+  }
+  // 正向指标：值越小越差（达成率等）
+  else {
+    if (kpiValue <= threshold.danger) return '#dc3545';    // 红色-危险
+    if (kpiValue <= threshold.warning) return '#fd7e14';  // 橙色-预警
+    return '#28a745'; // 绿色-正常
+  }
+}
+```
+
+### 3. 元数据卡片隐藏
 - 隐藏 `#metadata-card` 容器
 - 将分析模式、更新日期移到标题下方
 
-### 2. 筛选器重排
+### 4. 筛选器重排
 - 调整 HTML 结构，重置按钮移到最前
 - 优化按钮徽章显示逻辑
 
-### 3. 堆积图颜色动态化
+### 5. 堆积图颜色动态化
 - 修改 `_renderChartInternal` 中堆积柱状图的颜色生成逻辑
 - 根据每个数据点的值动态计算颜色
 
-### 4. 气泡图阈值标注
+### 6. 气泡图阈值标注
 - 在气泡图配置中添加 markLine
 - 在轴标签上显示阈值数值
+- 使用统一预警线格式（黄色虚线）
 
-### 5. 主题提示生成
+### 7. 主题提示内容替换
 - 新增 `generateSectionAlertTitle(tabName, dimension)` 函数
 - 在每个标签页切换时自动生成并显示主题
+- 直接替换div内容，不包含"主题:"前缀
+- 保持原有字体颜色和大小
 
-### 6. 文字方向修正
+### 8. 文字方向修正
 - 检查所有 ECharts 配置中的 `axisLabel.rotate`
-- 确保所有文字 `rotate: 0` 或适当的水平角度
+- 确保所有文字 `rotate: 0` （横向显示）
+- 包括轴标签、图例、数据标签等
 
 ## ✅ 用户确认清单
 

@@ -87,7 +87,7 @@ const Dashboard = {
     },
 
     setupWorkerBridge() {
-        // Simplified bridge since we are in the same context as the worker creation (mostly)
+        // Simplified bridge since we are in the same context as the worker creation (mostly) - v2.0
         // But if we want to use the request/response pattern:
         this.workerBridge = {
             messageIdCounter: 0,
@@ -154,32 +154,82 @@ const Dashboard = {
     },
 
     /**
-     * 获取堆积图KPI颜色（根据指标状态动态着色）
-     * @param {string} kpiName - KPI指标名称
+     * 获取统一预警线配置
+     * @param {number} value - 预警线值
+     * @param {string} name - 预警线名称
+     * @param {string} orientation - 'horizontal' 或 'vertical'
+     * @returns {object} - ECharts markLine配置
+     */
+    getWarningLineConfig(value, name, orientation = 'horizontal') {
+        const isHorizontal = orientation === 'horizontal';
+        return {
+            [isHorizontal ? 'yAxisIndex' : 'xAxisIndex']: 0,
+            type: 'line',
+            markLine: {
+                silent: true,
+                symbol: 'none',
+                lineStyle: {
+                    color: '#ffc000',  // 黄色
+                    type: 'dashed',    // 虚线
+                    width: 2
+                },
+                label: {
+                    show: true,
+                    position: 'end',
+                    formatter: `${name}预警线 ${value}`,
+                    color: '#ffc000',
+                    fontSize: 12,
+                    rotate: 0  // 确保文字横向
+                },
+                data: [isHorizontal ? { yAxis: value } : { xAxis: value }]
+            }
+        };
+    },
+
+    /**
+     * 获取统一状态颜色
+     * 规则1：正向指标和负向指标统一：值越大颜色越深
+     * 规则2：超过危险线显示红色，超过预警线显示橙色
+     * @param {string} kpiName - KPI名称
+     * @param {number} kpiValue - KPI值
+     * @param {boolean} isPositive - 是否正向指标（默认false负向）
+     * @returns {string} - 颜色值
+     */
+    getUnifiedStatusColor(kpiName, kpiValue, isPositive = false) {
+        const thresholds = {
+            '满期赔付率': { danger: 75, warning: 70, positive: false },
+            '费用率': { danger: 17, warning: 14, positive: false },
+            '变动成本率': { danger: 94, warning: 91, positive: false },
+            '保费进度达成率': { danger: 90, warning: 95, positive: true },
+            '边际贡献率': { danger: 10, warning: 15, positive: true }
+        };
+
+        const threshold = thresholds[kpiName];
+        if (!threshold) return '#888888'; // 默认灰色
+        
+        // 负向指标：值越大越差（赔付率、费用率等）
+        if (!threshold.positive) {
+            if (kpiValue >= threshold.danger) return '#dc3545';    // 红色-危险
+            if (kpiValue >= threshold.warning) return '#fd7e14'; // 橙色-预警
+            return '#28a745'; // 绿色-正常
+        }
+        // 正向指标：值越小越差（达成率等）
+        else {
+            if (kpiValue <= threshold.danger) return '#dc3545';    // 红色-危险
+            if (kpiValue <= threshold.warning) return '#fd7e14';  // 橙色-预警
+            return '#28a745'; // 绿色-正常
+        }
+    },
+
+    /**
+     * 获取堆积柱状图颜色（兼容旧接口）
+     * @param {string} kpiName - KPI名称
      * @param {number} kpiValue - KPI值
      * @returns {string} - 颜色值
      */
     getStackedBarColor(kpiName, kpiValue) {
-        const thresholdConfig = {
-            '满期赔付率': { danger: 75, warning: 70 },
-            '费用率': { danger: 17, warning: 14 },
-            '变动成本率': { danger: 94, warning: 91 }
-        };
-
-        const threshold = thresholdConfig[kpiName];
-        if (!threshold) {
-            // 默认使用蓝色（非风险指标）
-            return '#5470c6';
-        }
-
-        // 根据阈值判断颜色
-        if (kpiValue >= threshold.danger) {
-            return '#a02724'; // 红色-危险
-        } else if (kpiValue >= threshold.warning) {
-            return '#ffc000'; // 黄色-警告
-        } else {
-            return '#00b050'; // 绿色-良好
-        }
+        // 使用新的统一颜色函数
+        return this.getUnifiedStatusColor(kpiName, kpiValue, false);
     },
 
     calculateBubbleSize(values, dataIndex) {
@@ -625,6 +675,12 @@ const Dashboard = {
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 document.getElementById(`tab-${tabName}`).classList.add('active');
                 this.renderChart(tabName);
+
+                // 更新主题提示
+                const dimension = this.currentDimensions[tabName];
+                if (dimension !== 'kpi') {
+                    this.generateSectionAlertTitle(tabName, dimension);
+                }
             });
         });
     },
@@ -637,7 +693,7 @@ const Dashboard = {
             container.querySelectorAll('.dimension-btn').forEach(btn => btn.classList.remove('active'));
             if (clickedButton) clickedButton.classList.add('active');
         }
-        
+
         // Special case for overview
         if (tab === 'overview') {
             const kpiContent = document.getElementById('overview-kpi-content');
@@ -645,6 +701,9 @@ const Dashboard = {
             if (dimension === 'kpi') {
                 if (kpiContent) kpiContent.style.display = 'block';
                 if (chartContent) chartContent.style.display = 'none';
+                // 隐藏经营概览的主题提示（KPI标签页有自己的提示）
+                const overviewAlert = document.getElementById('overview-alert-title');
+                if (overviewAlert) overviewAlert.style.display = 'none';
                 return;
             } else {
                 if (kpiContent) kpiContent.style.display = 'none';
@@ -652,6 +711,11 @@ const Dashboard = {
             }
         }
         this.renderChart(tab);
+
+        // 生成板块主题提示（除了KPI标签页）
+        if (dimension !== 'kpi') {
+            this.generateSectionAlertTitle(tab, dimension);
+        }
     },
 
     switchSubTab(tab, subTab) {
@@ -668,6 +732,10 @@ const Dashboard = {
             }
         }
         this.renderChart(tab);
+
+        // 生成板块主题提示
+        const dimension = this.currentDimensions[tab];
+        this.generateSectionAlertTitle(tab, dimension);
     },
 
 
@@ -701,11 +769,17 @@ const Dashboard = {
                 
                 // 重新渲染
                 this.renderKPI();
-                
+
                 // 获取当前活动的 Tab
                 const activeTab = document.querySelector('.tab.active')?.dataset?.tab || 'overview';
                 this.renderChart(activeTab);
-                
+
+                // 更新主题提示
+                const dimension = this.currentDimensions[activeTab];
+                if (dimension !== 'kpi') {
+                    this.generateSectionAlertTitle(activeTab, dimension);
+                }
+
                 // 移除监听器
                 this.worker.removeEventListener('message', handler);
             }
@@ -1023,6 +1097,110 @@ const Dashboard = {
         }
     },
 
+    // 生成板块主题提示标题（通用函数）
+    generateSectionAlertTitle(tab, dimension) {
+        const alertId = tab === 'overview' ? 'overview-alert-title' : `${tab}-alert-title`;
+        const alertEl = document.getElementById(alertId);
+        const textEl = alertEl ? alertEl.querySelector('.alert-text') : null;
+
+        if (!alertEl || !textEl || !this.aggregatedData) return;
+
+        const data = this.aggregatedData;
+        const alerts = {
+            premium: [],  // 保费进度落后的维度值
+            cost: [],     // 变动成本率超标的维度值
+            lossRate: [], // 赔付率超标的维度值
+            lossFreq: [], // 赔付频度偏高的维度值
+            expense: []   // 费用率超标的维度值
+        };
+
+        // 遍历数据识别问题维度
+        data.forEach(item => {
+            const name = item.name;
+            const progress = item.保费时间进度达成率 || 0;
+            const costRate = item.变动成本率 || 0;
+            const lossRate = item.满期赔付率 || 0;
+            const claimFreq = item.出险率 || 0;
+            const expenseRate = item.费用率 || 0;
+
+            // 保费进度异常判断
+            if (progress < 95) {
+                alerts.premium.push(name);
+            }
+
+            // 变动成本率异常判断
+            if (costRate > 94) {
+                alerts.cost.push(name);
+            }
+
+            // 赔付率异常判断
+            if (lossRate > 75) {
+                alerts.lossRate.push(name);
+            }
+
+            // 出险率异常判断（假设阈值为30%）
+            if (claimFreq > 30) {
+                alerts.lossFreq.push(name);
+            }
+
+            // 费用率异常判断
+            if (expenseRate > 17) {
+                alerts.expense.push(name);
+            }
+        });
+
+        // 根据板块类型生成主题提示文字
+        let alertText = '';
+
+        switch(tab) {
+            case 'overview':
+                // 经营概览 - 三级机构/客户类别/业务类型
+                const premiumList = alerts.premium.slice(0, 5).join('、');
+                const costList = alerts.cost.slice(0, 5).join('、');
+                const parts = [];
+                if (premiumList) parts.push(`${premiumList}保费进度落后`);
+                if (costList) parts.push(`${costList}变动成本率超标`);
+                alertText = parts.length > 0 ? parts.join('；') : '';
+                break;
+
+            case 'premium':
+                // 保费进度板块
+                const premiumAlerts = alerts.premium.slice(0, 8).join('、');
+                alertText = premiumAlerts ? `${premiumAlerts}保费进度落后` : '';
+                break;
+
+            case 'cost':
+                // 变动成本板块
+                const costAlerts = alerts.cost.slice(0, 8).join('、');
+                alertText = costAlerts ? `${costAlerts}变动成本率超标` : '';
+                break;
+
+            case 'loss':
+                // 损失暴露板块
+                const lossRateList = alerts.lossRate.slice(0, 5).join('、');
+                const lossFreqList = alerts.lossFreq.slice(0, 5).join('、');
+                const lossParts = [];
+                if (lossRateList) lossParts.push(`${lossRateList}满期赔付率超标`);
+                if (lossFreqList) lossParts.push(`${lossFreqList}出险率偏高`);
+                alertText = lossParts.length > 0 ? lossParts.join('；') : '';
+                break;
+
+            case 'expense':
+                // 费用支出板块
+                const expenseAlerts = alerts.expense.slice(0, 8).join('、');
+                alertText = expenseAlerts ? `${expenseAlerts}费用率超标` : '';
+                break;
+        }
+
+        // 显示或隐藏主题提示
+        if (alertText) {
+            textEl.textContent = alertText;
+            alertEl.style.display = 'flex';
+        } else {
+            alertEl.style.display = 'none';
+        }
+    },
+
     // 生成动态标题
     generateDynamicTitle(tab, dimension, data) {
         const titleId = `${tab}-dynamic-title`;
@@ -1166,6 +1344,16 @@ const Dashboard = {
             }
         }
         else if (tab === 'expense') data.sort((a, b) => (b.费用率 || 0) - (a.费用率 || 0));
+
+        // 保存聚合数据供主题提示使用
+        this.aggregatedData = data.map(d => ({
+            name: d[dimField],
+            保费时间进度达成率: d.保费时间进度达成率 || 0,
+            变动成本率: d.变动成本率 || 0,
+            满期赔付率: d.满期赔付率 || 0,
+            出险率: d.出险率 || 0,
+            费用率: d.费用率 || 0
+        }));
 
         const chartDom = document.getElementById(`chart-${tab}`);
         if (!chartDom) return;
@@ -1403,28 +1591,30 @@ const Dashboard = {
                     markLine: {
                         silent: false,
                         symbol: 'none',
-                        lineStyle: { type: 'solid', width: 3, opacity: 0.8 },
+                        lineStyle: { type: 'dashed', width: 2, opacity: 0.8 },
                         data: [
                             {
                                 xAxis: thresholds['满期赔付率'] || 75,
-                                name: '赔付率阈值',
-                                lineStyle: { color: '#c00000' },
+                                name: '满期赔付率预警线',
+                                lineStyle: { color: '#ffc000' },  // 统一黄色
                                 label: {
-                                    formatter: '赔付率阈值',
+                                    formatter: '满期赔付率预警线 75%',
                                     fontWeight: 'bold',
-                                    color: '#c00000',
-                                    fontSize: 12
+                                    color: '#ffc000',
+                                    fontSize: 12,
+                                    rotate: 0  // 确保文字横向
                                 }
                             },
                             {
                                 yAxis: thresholds['费用率'] || 17,
-                                name: '费用率阈值',
-                                lineStyle: { color: '#ffc000' },
+                                name: '费用率预警线',
+                                lineStyle: { color: '#ffc000' },  // 统一黄色
                                 label: {
-                                    formatter: '费用率阈值',
+                                    formatter: '费用率预警线 17%',
                                     fontWeight: 'bold',
                                     color: '#ffc000',
-                                    fontSize: 12
+                                    fontSize: 12,
+                                    rotate: 0  // 确保文字横向
                                 }
                             }
                         ]

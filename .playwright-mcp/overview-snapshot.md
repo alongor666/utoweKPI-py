@@ -1,0 +1,86 @@
+### Page state
+- Page URL: http://localhost:8000/
+- Page Title: 经营分析可视化系统
+- Page Snapshot:
+```yaml
+- generic [ref=e13]:
+  - generic [ref=e14]:
+    - heading "天府车险第49周经营分析" [level=1] [ref=e15]
+    - generic [ref=e16]: 数据截止日期：2025-12-07
+  - generic [ref=e17]: "组织模式: 单机构 | 区间模式: 周次累计 | 分析模式: 完整版 | 更新日期: 2025-12-07"
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - text: "组织模式:"
+        - generic [ref=e21]:
+          - radio "多机构" [checked] [ref=e22]
+          - text: 多机构
+        - generic [ref=e23]:
+          - radio "单机构" [ref=e24]
+          - text: 单机构
+      - generic [ref=e25]:
+        - text: "区间模式:"
+        - generic [ref=e26]:
+          - radio "单周" [checked] [ref=e27]
+          - text: 单周
+        - generic [ref=e28]:
+          - radio "多周" [ref=e29]
+          - text: 多周
+    - button "重置" [ref=e31] [cursor=pointer]
+    - generic [ref=e33]:
+      - button "三级机构 ▼" [ref=e34] [cursor=pointer]:
+        - generic [ref=e35]: 三级机构
+        - generic [ref=e36]: ▼
+      - button "保单年度 ▼" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: 保单年度
+        - generic [ref=e39]: ▼
+      - button "周次 ▼" [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]: 周次
+        - generic [ref=e42]: ▼
+      - button "险种 ▼" [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 险种
+        - generic [ref=e45]: ▼
+      - button "业务类型 ▼" [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: 业务类型
+        - generic [ref=e48]: ▼
+      - button "险别组合 ▼" [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: 险别组合
+        - generic [ref=e51]: ▼
+      - button "是否新能源 ▼" [ref=e52] [cursor=pointer]:
+        - generic [ref=e53]: 是否新能源
+        - generic [ref=e54]: ▼
+      - button "是否过户 ▼" [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]: 是否过户
+        - generic [ref=e57]: ▼
+      - button "续保状态 ▼" [ref=e58] [cursor=pointer]:
+        - generic [ref=e59]: 续保状态
+        - generic [ref=e60]: ▼
+      - button "车险分等级 ▼" [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: 车险分等级
+        - generic [ref=e63]: ▼
+      - button "小货车评分 ▼" [ref=e64] [cursor=pointer]:
+        - generic [ref=e65]: 小货车评分
+        - generic [ref=e66]: ▼
+      - button "大货车评分 ▼" [ref=e67] [cursor=pointer]:
+        - generic [ref=e68]: 大货车评分
+        - generic [ref=e69]: ▼
+      - button "终端来源 ▼" [ref=e70] [cursor=pointer]:
+        - generic [ref=e71]: 终端来源
+        - generic [ref=e72]: ▼
+  - generic "导入新数据" [ref=e73] [cursor=pointer]:
+    - img [ref=e74]
+    - text: 导入新数据
+  - generic [ref=e76]:
+    - generic [ref=e77] [cursor=pointer]: 经营概览
+    - generic [ref=e78] [cursor=pointer]: 保费进度
+    - generic [ref=e79] [cursor=pointer]: 变动成本
+    - generic [ref=e80] [cursor=pointer]: 损失暴露
+    - generic [ref=e81] [cursor=pointer]: 费用支出
+  - generic [ref=e83]:
+    - generic [ref=e84]:
+      - button "KPI" [ref=e85] [cursor=pointer]
+      - button "三级机构" [active] [ref=e86] [cursor=pointer]
+      - button "客户类别" [ref=e87] [cursor=pointer]
+      - button "业务类型" [ref=e88] [cursor=pointer]
+    - generic [ref=e117]: 进度落后且亏损机构
+```
