@@ -545,6 +545,12 @@ function getDimensionValues(data, dimensionKey, currentFilters) {
 
     const config = dimensionConfigMap[dimensionKey];
     if (!config) return [];
+    
+    // 虚拟维度直接返回预定义选项
+    if (config.isVirtual && config.options) {
+        return [...config.options];
+    }
+    
     const fields = config.fields;
 
     const values = new Set();
@@ -581,14 +587,12 @@ function applyFiltersAndRecalc(data, filterState) {
         });
     }
 
-    // 2. Motorcycle Mode Filter (特殊处理，优先于其他筛选)
-    if (filterState.motorcycleMode && filterState.motorcycleMode !== '全部业务') {
-        filtered = filterByMotorcycleMode(filtered, filterState.motorcycleMode);
-    }
+    // 2. Motorcycle Filter (基于业务类型自动判断)
 
     // 3. Drill Filter
     if (filterState.drill && filterState.drill.applied && filterState.drill.applied.length > 0) {
         const dimensionConfigMap = {
+            'motorcycle_mode': ['motorcycle_mode'], // 虚拟维度，不需要映射到具体字段
             'third_level_organization': ['third_level_organization', '三级机构', '机构'],
             'customer_category_3': ['customer_category_3', '客户类别'],
             'ui_short_label': ['ui_short_label', '业务类型简称', 'business_type_category'],
@@ -638,53 +642,4 @@ function applyFiltersAndRecalc(data, filterState) {
 }
 
 // 摩托车业务筛选函数
-function filterByMotorcycleMode(data, mode) {
-    console.log(`[Worker] 应用摩托车模式筛选: ${mode}, 原始数据行数: ${data.length}`);
 
-    let filtered;
-    switch(mode) {
-        case '不含摩托车':
-            filtered = data.filter(row => {
-                // 检查多个可能的字段中是否包含摩托车相关内容
-                const businessType = String(row['业务类型'] || row['ui_short_label'] || row['业务类型简称'] || '').toLowerCase();
-                const customerCategory = String(row['客户类别'] || row['customer_category_3'] || '').toLowerCase();
-                const vehicleType = String(row['车辆类型'] || '').toLowerCase();
-
-                const hasMotorcycle = businessType.includes('摩托车') ||
-                                     customerCategory.includes('摩托车') ||
-                                     vehicleType.includes('摩托车') ||
-                                     businessType.includes('motorcycle') ||
-                                     customerCategory.includes('motorcycle') ||
-                                     vehicleType.includes('motorcycle');
-
-                return !hasMotorcycle;
-            });
-            break;
-
-        case '仅摩托车':
-            filtered = data.filter(row => {
-                // 检查多个可能的字段中是否包含摩托车相关内容
-                const businessType = String(row['业务类型'] || row['ui_short_label'] || row['业务类型简称'] || '').toLowerCase();
-                const customerCategory = String(row['客户类别'] || row['customer_category_3'] || '').toLowerCase();
-                const vehicleType = String(row['车辆类型'] || '').toLowerCase();
-
-                const hasMotorcycle = businessType.includes('摩托车') ||
-                                     customerCategory.includes('摩托车') ||
-                                     vehicleType.includes('摩托车') ||
-                                     businessType.includes('motorcycle') ||
-                                     customerCategory.includes('motorcycle') ||
-                                     vehicleType.includes('motorcycle');
-
-                return hasMotorcycle;
-            });
-            break;
-
-        case '全部业务':
-        default:
-            filtered = data;  // 返回全部数据
-            break;
-    }
-
-    console.log(`[Worker] 摩托车模式筛选完成，剩余数据行数: ${filtered.length}`);
-    return filtered;
-}

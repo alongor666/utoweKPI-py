@@ -23,8 +23,7 @@ const Dashboard = {
         drill: {
             applied: [],  // 已应用的筛选条件 [{dimension, values}]
             draft: {}     // 草稿状态 {dimensionKey: [selectedValues]}
-        },
-        motorcycleMode: '全部业务'  // 摩托车模式字段
+        }
     },
 
     // 当前打开的下拉面板
@@ -642,16 +641,7 @@ const Dashboard = {
         this.renderChart(tab);
     },
 
-    // 摩托车模式切换
-    switchMotorcycleMode(mode) {
-        console.log('切换摩托车模式:', mode);
 
-        // 更新状态
-        this.filterState.motorcycleMode = mode;
-
-        // 重新应用筛选并重新渲染
-        this.applyFilters();
-    },
 
     // 应用筛选
     applyFilters() {
@@ -699,10 +689,24 @@ const Dashboard = {
         });
     },
 
-    // 获取摩托车模式预警线配置
+    // 获取业务类型预警线配置（基于业务类型选择判断）
     getMotorcycleModeWarningLines() {
-        const mode = this.filterState.motorcycleMode || '全部业务';
-        console.log(`[Dashboard] 获取预警线配置，当前模式: ${mode}`);
+        const businessTypes = this.filterState.drill.applied.find(c => c.dimension === 'ui_short_label')?.values || 
+                           this.filterState.drill.draft['ui_short_label'] || [];
+        
+        // 判断是否为仅摩托车模式
+        const isMotorcycleOnly = businessTypes.length === 1 && businessTypes[0] === '摩托车';
+        // 判断是否为不含摩托车模式（摩托车不在选择中）
+        const excludeMotorcycle = businessTypes.length > 0 && !businessTypes.includes('摩托车');
+        
+        let mode = '全部业务';
+        if (isMotorcycleOnly) {
+            mode = '仅摩托车';
+        } else if (excludeMotorcycle) {
+            mode = '不含摩托车';
+        }
+        
+        console.log(`[Dashboard] 获取预警线配置，业务类型: [${businessTypes.join(', ')}], 判断模式: ${mode}`);
 
         const configs = {
             '不含摩托车': [
@@ -1959,6 +1963,30 @@ const Dashboard = {
         const listContainer = document.getElementById('drill-dropdown-list');
         listContainer.innerHTML = '';
 
+        // 业务类型添加快捷选择按钮
+        if (dimensionKey === 'ui_short_label') {
+            const quickActions = document.createElement('div');
+            quickActions.className = 'drill-quick-actions';
+            quickActions.innerHTML = `
+                <div class="quick-action-title">快捷选择：</div>
+                <button class="quick-action-btn" onclick="Dashboard.quickSelectBusinessType('仅摩托车')">
+                    🛵 仅摩托车
+                </button>
+                <button class="quick-action-btn" onclick="Dashboard.quickSelectBusinessType('不含摩托车')">
+                    🚗 不含摩托车
+                </button>
+                <button class="quick-action-btn" onclick="Dashboard.quickSelectBusinessType('全部业务')">
+                    📋 全部业务
+                </button>
+            `;
+            listContainer.appendChild(quickActions);
+
+            // 添加分隔线
+            const separator = document.createElement('div');
+            separator.className = 'drill-dropdown-separator';
+            listContainer.appendChild(separator);
+        }
+
         // 从Worker获取唯一值
         this.worker.postMessage({
             type: 'get_dimension_values',
@@ -1982,22 +2010,22 @@ const Dashboard = {
                     const item = document.createElement('div');
                     item.className = 'drill-dropdown-item';
 
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.value = value;
-                    checkbox.checked = currentSelection.includes(value);
-                    checkbox.id = `drill-${dimensionKey}-${value}`;
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.value = value;
+                    input.checked = currentSelection.includes(value);
+                    input.id = `drill-${dimensionKey}-${value}`;
 
                     const label = document.createElement('label');
-                    label.htmlFor = checkbox.id;
+                    label.htmlFor = input.id;
                     // 使用映射后的文本
                     label.textContent = this.getValueLabel(dimensionKey, value);
 
-                    checkbox.addEventListener('change', () => {
-                        this.handleValueSelection(dimensionKey, value, checkbox.checked);
+                    input.addEventListener('change', () => {
+                        this.handleValueSelection(dimensionKey, value, input.checked);
                     });
 
-                    item.appendChild(checkbox);
+                    item.appendChild(input);
                     item.appendChild(label);
                     listContainer.appendChild(item);
                 });
@@ -2024,6 +2052,7 @@ const Dashboard = {
             this.filterState.drill.draft[dimensionKey] = [];
         }
 
+        // 多选逻辑
         if (checked) {
             // 添加值
             if (!this.filterState.drill.draft[dimensionKey].includes(value)) {
@@ -2045,6 +2074,48 @@ const Dashboard = {
 
         // 移除实时更新标签逻辑
         // this.renderDrillTags(true);
+    },
+
+    // 业务类型快捷选择
+    quickSelectBusinessType(mode) {
+        console.log(`[Dashboard] 业务类型快捷选择: ${mode}`);
+        
+        // 检查Worker是否可用
+        if (!this.worker) {
+            console.error('[Dashboard] Worker实例不存在，无法执行快捷选择');
+            return;
+        }
+        
+        // 从当前数据直接获取业务类型
+        const allBusinessTypes = [...new Set(this.data.map(item => item.business_type_category))].filter(Boolean);
+        console.log('[Dashboard] 可用业务类型:', allBusinessTypes);
+        
+        let selectedValues = [];
+        switch(mode) {
+            case '仅摩托车':
+                selectedValues = allBusinessTypes.filter(type => type === '摩托车');
+                break;
+            case '不含摩托车':
+                selectedValues = allBusinessTypes.filter(type => type !== '摩托车');
+                break;
+            case '全部业务':
+                selectedValues = allBusinessTypes;
+                break;
+        }
+        
+        console.log(`[Dashboard] 快捷选择"${mode}"的结果:`, selectedValues);
+        
+        // 更新草稿状态
+        this.filterState.drill.draft['ui_short_label'] = selectedValues;
+        
+        // 更新UI
+        this.updateSelectorButtonUI('ui_short_label');
+        
+        // 立即应用筛选
+        this.applyDrillFilters();
+        
+        // 关闭下拉面板
+        this.closeDropdown();
     },
 
     // 值显示映射配置
