@@ -166,6 +166,16 @@ function processData(csvData) {
     // 3. Year Plans
     const planMap = loadYearPlans();
     
+    // 计算总计划保费（用于计算整体保费进度达成率）
+    let totalPlanPremium = 0;
+    if (planMap.size > 0) {
+        for (const [orgName, planData] of planMap.entries()) {
+            if (orgName !== '本部') {  // 排除本部
+                totalPlanPremium += planData.premium || 0;
+            }
+        }
+    }
+    
     // 4. Aggregations
     const dataByOrg = aggregateByDimension(mappedData, 'third_level_organization', '机构', planMap, totalPremium, totalClaim);
     const dataByCategory = aggregateByDimension(mappedData, 'customer_category_3', '客户类别', null, totalPremium, totalClaim);
@@ -178,14 +188,26 @@ function processData(csvData) {
     
     // 6. Problem detection
     const problems = detectProblems(dataByOrg);
-    
+
     // 7. Dynamic Info
     const dynamicInfo = extractDynamicInfo(csvData);
+
+    // 8. 计算整体保费时间进度达成率（基于之前计算的totalPlanPremium）
+    let globalProgressRate = null;
+    if (totalPlanPremium > 0) {
+        globalProgressRate = (totalPremium / totalPlanPremium) * 100;
+    }
+
+    console.log('[Worker] 保费进度计算:', {
+        totalPremium,
+        totalPlanPremium,
+        progressRate: globalProgressRate
+    });
 
     return {
         original: {
             // We do NOT send back the full raw data to avoid memory cloning issues on large files
-            // unless strictly requested. 
+            // unless strictly requested.
             // The template generation logic in main thread currently expects `data.original`.
             // We need to adjust this.
             // For now, we omit 'original' raw array and only send dynamic info.
@@ -196,7 +218,8 @@ function processData(csvData) {
             满期赔付率: globalClaimRate,
             费用率: globalExpenseRate,
             变动成本率: globalCostRate,
-            已报告赔款: totalClaim
+            已报告赔款: totalClaim,
+            保费时间进度达成率: globalProgressRate
         },
         problems: problems.slice(0, 5),
         dataByOrg: dataByOrg,
