@@ -521,22 +521,16 @@ body {
 
 /* 板块主题提示 */
 .section-alert-title {
-    background: linear-gradient(to right, #fff4e6, #fffbf0);
-    border-left: 4px solid #ffc000;
-    padding: 12px 16px;
+    padding: 8px 16px;
     margin: 16px 0;
     font-size: 14px;
-    color: #333;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    color: #dc3545;  /* 红色文字 */
+    font-weight: 500;
+    /* 移除背景色、边框、阴影等装饰 */
 }
 
 .section-alert-title .alert-icon {
-    font-size: 18px;
-    flex-shrink: 0;
+    display: none;  /* 隐藏警告符号 */
 }
 
 .section-alert-title .alert-text {
