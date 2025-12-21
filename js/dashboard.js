@@ -1517,6 +1517,7 @@ const Dashboard = {
             cost: [],     // 变动成本率超标的维度值
             lossRate: [], // 赔付率超标的维度值
             lossFreq: [], // 赔付频度偏高的维度值
+            lossContribution: [], // 赔款贡献度高于保费贡献度的维度值
             expense: []   // 费用率超标的维度值
         };
 
@@ -1528,6 +1529,8 @@ const Dashboard = {
             const lossRate = item.满期赔付率 || 0;
             const claimFreq = item.出险率 || 0;
             const expenseRate = item.费用率 || 0;
+            const premiumContribution = item.保费占比 || 0;
+            const claimContribution = item.已报告赔款占比 || 0;
 
             // 保费进度异常判断
             if (typeof progress === 'number' && progress < 95) {
@@ -1539,9 +1542,14 @@ const Dashboard = {
                 alerts.cost.push(name);
             }
 
-            // 赔付率异常判断
-            if (lossRate > 75) {
+            // 赔付率异常判断（统一为70%）
+            if (lossRate > 70) {
                 alerts.lossRate.push(name);
+            }
+
+            // 赔款贡献度判断（赔款贡献度 > 保费贡献度）
+            if (claimContribution > premiumContribution) {
+                alerts.lossContribution.push(name);
             }
 
             // 出险率异常判断（假设阈值为30%）
@@ -1582,13 +1590,13 @@ const Dashboard = {
                 break;
 
             case 'loss':
-                // 损失暴露板块
+                // 损失暴露板块（2025-12-21更新）
+                const lossContributionList = alerts.lossContribution.slice(0, 5).join('、');
                 const lossRateList = alerts.lossRate.slice(0, 5).join('、');
-                const lossFreqList = alerts.lossFreq.slice(0, 5).join('、');
                 const lossParts = [];
-                if (lossRateList) lossParts.push(`${lossRateList}满期赔付率超标`);
-                if (lossFreqList) lossParts.push(`${lossFreqList}出险率偏高`);
-                alertText = lossParts.length > 0 ? lossParts.join('；') : '';
+                if (lossContributionList) lossParts.push(`${lossContributionList}的赔款贡献度高于保费贡献度`);
+                if (lossRateList) lossParts.push(`${lossRateList}的满期赔付率超70%`);
+                alertText = lossParts.length > 0 ? lossParts.join('，') : '';
                 break;
 
             case 'expense':
@@ -1762,7 +1770,9 @@ const Dashboard = {
             变动成本率: d.变动成本率 || 0,
             满期赔付率: d.满期赔付率 || 0,
             出险率: d.出险率 || 0,
-            费用率: d.费用率 || 0
+            费用率: d.费用率 || 0,
+            保费占比: d.保费占比 || 0,
+            已报告赔款占比: d.已报告赔款占比 || 0
         }));
 
         const chartDom = document.getElementById(`chart-${tab}`);
@@ -1994,17 +2004,14 @@ const Dashboard = {
                     label: {
                         show: true,
                         position: 'top',
-                        overflow: 'break',
                         fontSize: 10,
-                        lineHeight: 12,
-                        width: 100,
                         fontWeight: 'bold',
                         color: '#000000',
                         formatter: (p) => {
-                            // 简化标签：只显示名称和变动成本率
-                            const name = this.wrapTextByCharCount(p.data.name, 6);
+                            // 单行显示：名称 值%
+                            const name = p.data.name;
                             const rate = this.formatRate(p.data.value[2], 1);
-                            return `${name}\n${rate}%`;
+                            return `${name} ${rate}%`;
                         }
                     },
                     labelLayout: { moveOverlap: 'shiftY' },
@@ -2014,11 +2021,11 @@ const Dashboard = {
                         lineStyle: { type: 'dashed', width: 2, opacity: 0.8 },
                         data: [
                             {
-                                xAxis: thresholds['满期赔付率'] || 75,
+                                xAxis: 70,  // 统一为70%
                                 name: '满期赔付率预警线',
                                 lineStyle: { color: '#ffc000' },  // 统一黄色
                                 label: {
-                                    formatter: '满期赔付率预警线 75%',
+                                    formatter: '满期赔付率预警线 70%',
                                     fontWeight: 'bold',
                                     color: '#ffc000',
                                     fontSize: 12,
@@ -2133,7 +2140,7 @@ const Dashboard = {
                             type: 'bar',
                             yAxisIndex: 0,
                             data: data.map(d => d.保费占比 || 0),
-                            itemStyle: { color: '#808080' },  // 灰色
+                            itemStyle: { color: '#e0e0e0' },  // 浅灰色
                             label: { show: true, position: 'top', formatter: (p) => `${this.formatRate(p.value, 1)}%` },
                             labelLayout: { moveOverlap: 'shiftY' }
                         },
@@ -2141,12 +2148,8 @@ const Dashboard = {
                             name: this.getDisplayName('已报告赔款占比'),
                             type: 'bar',
                             yAxisIndex: 0,
-                            data: data.map((d, index) => ({
-                                value: d.已报告赔款占比 || 0,
-                                itemStyle: { 
-                                    color: this.getSpecialClaimContributionColor(d, index)  // 特殊颜色规则
-                                }
-                            })),
+                            data: data.map(d => d.已报告赔款占比 || 0),
+                            itemStyle: { color: '#a6a6a6' },  // 灰色
                             label: { show: true, position: 'top', formatter: (p) => `${this.formatRate(p.value, 1)}%` },
                             labelLayout: { moveOverlap: 'shiftY' }
                         },
@@ -2155,8 +2158,8 @@ const Dashboard = {
                             type: 'line',
                             yAxisIndex: 1,
                             data: data.map(d => d.满期赔付率 || 0),
-                            itemStyle: { color: '#808080' },  // 灰色连线
-                            lineStyle: { color: '#808080', width: 3 },  // 灰色连线
+                            itemStyle: { color: '#0070c0' },  // 蓝色
+                            lineStyle: { color: '#0070c0', width: 2 },  // 蓝色，细线
                             label: { show: true, position: 'top', formatter: (p) => `${this.formatRate(p.value, 1)}%` },
                             labelLayout: { moveOverlap: 'shiftY' },
                             markLine: {
@@ -2165,7 +2168,7 @@ const Dashboard = {
                                 lineStyle: { type: 'dashed', width: 2, opacity: 0.8, color: '#ffc000' },
                                 data: [
                                     {
-                                        yAxis: thresholds['满期赔付率'] || 70,
+                                        yAxis: 70,  // 统一为70%
                                         name: '预警线',
                                         label: {
                                             formatter: '预警线: {c}%',
@@ -2222,17 +2225,14 @@ const Dashboard = {
                     label: {
                         show: true,
                         position: 'top',
-                        overflow: 'break',
                         fontSize: 10,
-                        lineHeight: 12,
-                        width: 100,
                         fontWeight: 'bold',
                         color: '#000000',
                         formatter: (p) => {
-                            // 简化标签：只显示名称和出险率
-                            const name = this.wrapTextByCharCount(p.data.name, 6);
+                            // 单行显示：名称 值%
+                            const name = p.data.name;
                             const rate = this.formatRate(p.data.value[0], 1);
-                            return `${name}\n${rate}%`;
+                            return `${name} ${rate}%`;
                         }
                     },
                     labelLayout: { moveOverlap: 'shiftY' },
@@ -2306,7 +2306,7 @@ const Dashboard = {
                         type: 'bar',
                         yAxisIndex: 0,
                         data: expenseAmounts,
-                        itemStyle: { color: '#808080' },  // 灰色
+                        itemStyle: { color: '#e0e0e0' },  // 浅灰色
                         label: {
                             show: true,
                             position: 'top',
