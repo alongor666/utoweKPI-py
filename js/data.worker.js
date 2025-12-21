@@ -256,7 +256,11 @@ function processData(csvData) {
         dataByCategory: dataByCategory,
         dataByBusinessType: dataByBusinessType,
         thresholds: thresholds || {},
-        dynamicInfo: dynamicInfo // Explicitly pass dynamic info
+        dynamicInfo: dynamicInfo, // Explicitly pass dynamic info
+        // 顶层暴露week和year字段，供页面标题使用
+        week: dynamicInfo.week,
+        year: dynamicInfo.year,
+        organizations: dynamicInfo.organizations
     };
 }
 
