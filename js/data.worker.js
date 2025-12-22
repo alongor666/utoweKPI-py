@@ -488,10 +488,24 @@ function aggregateByDimension(csvData, dimensionField, labelName, planMap, total
 
     // 计算总费用金额用于费用占比计算
     const totalExpense = results.reduce((sum, item) => sum + (item.费用额 || 0), 0);
-    
-    // 为每个项目添加费用占比
+
+    // 获取费用率阈值配置（默认14%）
+    const expenseThreshold = thresholds?.['费用率阈值']?.['预算阈值'] || 14;
+
+    // 为每个项目添加费用占比和费用结余指标
     results.forEach(item => {
         item.费用占比 = totalExpense > 0 ? ((item.费用额 || 0) / totalExpense * 100) : 0;
+
+        // 费用结余计算
+        const premium = item.签单保费 || 0;
+        const expenseRate = item.费用率 || 0;
+
+        // 费用率超支（百分点）= 实际费用率 - 预算阈值
+        item.费用率超支 = expenseRate - expenseThreshold;
+
+        // 费用结余额（元）= 签单保费 × (实际费用率/100 - 预算阈值/100)
+        // 负值表示节约，正值表示超支
+        item.费用结余额 = premium * (expenseRate / 100 - expenseThreshold / 100);
     });
 
     results.sort((a, b) => b.签单保费 - a.签单保费);
