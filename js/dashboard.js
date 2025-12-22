@@ -2371,6 +2371,11 @@ const Dashboard = {
         option = this._applyResponsiveCategoryXAxis(option, chart);
         chart.setOption(option);
 
+        // 如果是费用支出板块，同时渲染费用结余图表
+        if (tab === 'expense') {
+            this.renderExpenseSurplusChart(data, dimField);
+        }
+
         // 生成动态标题和正文分析
         this.generateDynamicTitle(tab, dimension, data);
         this.generateAnalysisContent(tab, dimension, data);
@@ -2395,6 +2400,181 @@ const Dashboard = {
             data: data.length,
             timestamp: Date.now()
         };
+    },
+
+    // 渲染费用结余分析图表
+    renderExpenseSurplusChart(data, dimField) {
+        const chartDom = document.getElementById('chart-expense-surplus');
+        if (!chartDom) return;
+
+        // 获取费用率阈值配置
+        const expenseThreshold = this.data.thresholds?.['费用率阈值']?.['预算阈值'] || 14;
+
+        if (echarts.getInstanceByDom(chartDom)) echarts.dispose(chartDom);
+        const chart = echarts.init(chartDom);
+
+        // 准备数据
+        const surplusAmounts = data.map(d => (d.费用结余额 || 0) / 10000); // 转换为万元
+        const rateDeviations = data.map(d => d.费用率超支 || 0);
+
+        const globalOptions = this.getGlobalChartOptions();
+
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                textStyle: { fontWeight: 'bold' },
+                formatter: (params) => {
+                    const item = data[params[0].dataIndex];
+                    const surplus = item.费用结余额 || 0;
+                    const rateDeviation = item.费用率超支 || 0;
+                    const actualRate = item.费用率 || 0;
+
+                    let result = `${params[0].axisValue}<br/>`;
+                    result += `费用结余额: ${surplus >= 0 ? '+' : ''}${this.formatWanYuanFromYuan(surplus)}万元`;
+                    result += surplus >= 0 ? '（超支）' : '（节约）';
+                    result += '<br/>';
+                    result += `费用率超支: ${rateDeviation >= 0 ? '+' : ''}${this.formatRate(Math.abs(rateDeviation), 1)}%<br/>`;
+                    result += `实际费用率: ${this.formatRate(actualRate, 1)}%<br/>`;
+                    result += `费用率阈值: ${expenseThreshold}%`;
+
+                    return result;
+                }
+            },
+            legend: {
+                data: ['费用结余额', '费用率超支'],
+                ...globalOptions.legend
+            },
+            grid: globalOptions.grid,
+            xAxis: {
+                type: 'category',
+                data: data.map(d => d[dimField]),
+                ...globalOptions.xAxis
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '费用结余额(万元)',
+                    position: 'left',
+                    axisLabel: {
+                        color: '#333333',
+                        formatter: '{value}'
+                    },
+                    axisLine: {
+                        lineStyle: { color: '#333333' }
+                    }
+                },
+                {
+                    type: 'value',
+                    name: '费用率超支(%)',
+                    position: 'right',
+                    axisLabel: {
+                        color: '#0070c0',
+                        formatter: '{value}%'
+                    },
+                    axisLine: {
+                        lineStyle: { color: '#0070c0' }
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '费用结余额',
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: surplusAmounts.map((value, index) => ({
+                        value: value,
+                        itemStyle: {
+                            color: value >= 0 ? '#c00000' : '#00b050' // 红色超支，绿色节约
+                        }
+                    })),
+                    label: {
+                        show: true,
+                        position: (params) => params.value >= 0 ? 'top' : 'bottom',
+                        formatter: (params) => {
+                            const sign = params.value >= 0 ? '+' : '';
+                            return `${sign}${this.formatWanYuanFromYuan(Math.abs(params.value) * 10000)}万`;
+                        },
+                        color: (params) => params.value >= 0 ? '#c00000' : '#00b050',
+                        fontSize: this.calculateOptimalLabelSize(data),
+                        fontWeight: 'bold'
+                    },
+                    markLine: {
+                        silent: false,
+                        symbol: 'none',
+                        data: [
+                            {
+                                yAxis: 0,
+                                name: '预算线',
+                                lineStyle: {
+                                    color: '#333333',
+                                    type: 'solid',
+                                    width: 2
+                                },
+                                label: {
+                                    formatter: '预算基准线',
+                                    fontWeight: 'bold',
+                                    color: '#333333',
+                                    fontSize: 12,
+                                    position: 'insideEndTop'
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    name: '费用率超支',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: rateDeviations,
+                    lineStyle: {
+                        color: '#0070c0',
+                        width: 2
+                    },
+                    itemStyle: {
+                        color: '#0070c0'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: (params) => {
+                            const sign = params.value >= 0 ? '+' : '';
+                            return `${sign}${this.formatRate(Math.abs(params.value), 1)}%`;
+                        },
+                        color: '#0070c0',
+                        fontSize: this.calculateOptimalLabelSize(data),
+                        fontWeight: 'bold'
+                    },
+                    symbolSize: 6,
+                    smooth: false,
+                    markLine: {
+                        silent: false,
+                        symbol: 'none',
+                        data: [
+                            {
+                                yAxis: 0,
+                                name: '费用率阈值线',
+                                lineStyle: {
+                                    color: '#ffc000',
+                                    type: 'dashed',
+                                    width: 2,
+                                    opacity: 0.8
+                                },
+                                label: {
+                                    formatter: `${expenseThreshold}%阈值线`,
+                                    fontWeight: 'bold',
+                                    color: '#ffc000',
+                                    fontSize: 12,
+                                    position: 'insideEndTop'
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        };
+
+        const responsiveOption = this._applyResponsiveCategoryXAxis(option, chart);
+        chart.setOption(responsiveOption);
     },
 
     getDrillDownDimensions() {
