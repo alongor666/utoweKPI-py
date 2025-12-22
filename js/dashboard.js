@@ -468,7 +468,7 @@ const Dashboard = {
                 lineStyle: {
                     color: '#ffc000',  // 黄色
                     type: 'dashed',    // 虚线
-                    width: 2
+                    width: 1
                 },
                 label: {
                     show: true,
@@ -747,20 +747,21 @@ const Dashboard = {
                 right: '8%',
                 bottom: '15%',
                 top: '10%',
-                containLabel: true
+                containLabel: true,
+                show: false  // 不显示网格线
             },
-            // 移除所有网格线
+            // 移除所有网格线，统一线条宽度
             xAxis: {
-                splitLine: { show: false },
-                axisLine: { 
-                    lineStyle: { color: '#333', width: 2 }
+                splitLine: { show: false },  // 不显示网格线
+                axisLine: {
+                    lineStyle: { color: '#333', width: 1 }
                 },
                 axisTick: { show: false },
                 axisLabel: {
                     fontWeight: 'bold',
                     color: '#333',
                     interval: 0,
-                    rotate: 0, // 不倾斜
+                    rotate: 0,
                     fontSize: 12,
                     overflow: 'break'
                 },
@@ -768,13 +769,13 @@ const Dashboard = {
                     fontWeight: 'bold',
                     fontSize: 14,
                     color: '#333',
-                    padding: [20, 0, 0, 0] // 确保坐标轴名称不被遮挡
+                    padding: [20, 0, 0, 0]
                 }
             },
             yAxis: {
-                splitLine: { show: false }, // 去掉网格线
-                axisLine: { 
-                    lineStyle: { color: '#333', width: 2 }
+                splitLine: { show: false },  // 不显示网格线
+                axisLine: {
+                    lineStyle: { color: '#333', width: 1 }
                 },
                 axisTick: { show: false },
                 axisLabel: {
@@ -786,7 +787,7 @@ const Dashboard = {
                     fontWeight: 'bold',
                     fontSize: 14,
                     color: '#333',
-                    padding: [0, 0, 20, 0] // 确保坐标轴名称不被遮挡
+                    padding: [0, 0, 20, 0]
                 }
             },
             // 图例样式
@@ -801,6 +802,10 @@ const Dashboard = {
                 textStyle: {
                     fontWeight: 'bold'
                 }
+            },
+            // 全局线条配置：折线宽度统一为1px
+            lineStyle: {
+                width: 1
             }
         };
     },
@@ -1209,7 +1214,7 @@ const Dashboard = {
                 {
                     xAxis: 15,
                     name: '出险频度预警线',
-                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 1 },
                     label: {
                         formatter: '预警线: 15%',
                         fontWeight: 'bold',
@@ -1221,7 +1226,7 @@ const Dashboard = {
                 {
                     yAxis: 4500,
                     name: '案均赔款预警线',
-                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 1 },
                     label: {
                         formatter: '预警线: 4500元',
                         fontWeight: 'bold',
@@ -1235,7 +1240,7 @@ const Dashboard = {
                 {
                     xAxis: 12,
                     name: '出险频度预警线',
-                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 1 },
                     label: {
                         formatter: '预警线: 12%',
                         fontWeight: 'bold',
@@ -1247,7 +1252,7 @@ const Dashboard = {
                 {
                     yAxis: 4900,
                     name: '案均赔款预警线',
-                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 1 },
                     label: {
                         formatter: '预警线: 4900元',
                         fontWeight: 'bold',
@@ -1261,7 +1266,7 @@ const Dashboard = {
                 {
                     xAxis: 12,
                     name: '出险频度预警线',
-                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 1 },
                     label: {
                         formatter: '预警线: 12%',
                         fontWeight: 'bold',
@@ -1273,7 +1278,7 @@ const Dashboard = {
                 {
                     yAxis: 4900,
                     name: '案均赔款预警线',
-                    lineStyle: { color: '#ffc000', type: 'dashed', width: 2 },
+                    lineStyle: { color: '#ffc000', type: 'dashed', width: 1 },
                     label: {
                         formatter: '预警线: 4900元',
                         fontWeight: 'bold',
@@ -1842,20 +1847,22 @@ const Dashboard = {
                 },
                 yAxis: [
                     {
+                        ...globalOptions.yAxis,
                         type: 'value',
                         name: '占比(%)',
                         min: 0,
                         max: dimension === 'org' ? 150 : 100,  // 与右轴保持一致，避免视觉误导
                         position: 'left',
-                        ...globalOptions.yAxis
+                        splitLine: { show: false }  // 确保不显示网格线
                     },
                     {
+                        ...globalOptions.yAxis,
                         type: 'value',
                         name: lineSeriesName + '(%)',
                         min: 0,
                         max: dimension === 'org' ? 150 : 100,  // 保费时间进度达成率最高150%，保费贡献度最高100%
                         position: 'right',
-                        ...globalOptions.yAxis
+                        splitLine: { show: false }  // 确保不显示网格线
                     }
                 ],
                 series: [
@@ -1898,7 +1905,7 @@ const Dashboard = {
                                     lineStyle: {
                                         color: '#ffc000',
                                         type: 'dashed',
-                                        width: 2,
+                                        width: 1,
                                         opacity: 0.8
                                     },
                                     label: {
@@ -1915,7 +1922,7 @@ const Dashboard = {
                                     lineStyle: {
                                         color: '#ffc000',
                                         type: 'dashed',
-                                        width: 2,
+                                        width: 1,
                                         opacity: 0.8
                                     },
                                     label: {
@@ -1936,7 +1943,7 @@ const Dashboard = {
                         data: lineSeriesData,
                         lineStyle: {
                             color: lineSeriesColor,  // 深蓝色连线
-                            width: 2
+                            width: 1
                         },
                         itemStyle: {
                             color: lineSeriesColor,
@@ -1984,10 +1991,11 @@ const Dashboard = {
                     ...globalOptions.xAxis
                 },
                 yAxis: {
+                    ...globalOptions.yAxis,
                     name: '费用率(%)',
                     min: 0,
                     max: 30,
-                    ...globalOptions.yAxis
+                    splitLine: { show: false }  // 确保不显示网格线
                 },
                 series: [{
                     type: 'scatter',
@@ -2018,7 +2026,7 @@ const Dashboard = {
                     markLine: {
                         silent: false,
                         symbol: 'none',
-                        lineStyle: { type: 'dashed', width: 2, opacity: 0.8 },
+                        lineStyle: { type: 'dashed', width: 1, opacity: 0.8 },
                         data: [
                             {
                                 xAxis: 70,  // 统一为70%
@@ -2071,9 +2079,10 @@ const Dashboard = {
                     ...globalOptions.xAxis
                 },
                 yAxis: {
+                    ...globalOptions.yAxis,
                     type: 'value',
                     name: '签单保费(万元)',
-                    ...globalOptions.yAxis
+                    splitLine: { show: false }  // 确保不显示网格线
                 },
                 series: [{
                     type: 'bar',
@@ -2115,18 +2124,20 @@ const Dashboard = {
                     },
                     yAxis: [
                         {
+                            ...globalOptions.yAxis,
                             type: 'value',
                             name: '占比(%)',
                             min: 0,
                             max: 100,
-                            ...globalOptions.yAxis
+                            splitLine: { show: false }  // 确保不显示网格线
                         },
                         {
+                            ...globalOptions.yAxis,
                             type: 'value',
                             name: '满期赔付率(%)',
                             min: 0,
                             max: 130,
-                            ...globalOptions.yAxis
+                            splitLine: { show: false }  // 确保不显示网格线
                         }
                     ],
                     legend: {
@@ -2159,13 +2170,13 @@ const Dashboard = {
                             yAxisIndex: 1,
                             data: data.map(d => d.满期赔付率 || 0),
                             itemStyle: { color: '#0070c0' },  // 蓝色
-                            lineStyle: { color: '#0070c0', width: 2 },  // 蓝色，细线
+                            lineStyle: { color: '#0070c0', width: 1 },  // 蓝色，细线
                             label: { show: true, position: 'top', formatter: (p) => `${this.formatRate(p.value, 1)}%` },
                             labelLayout: { moveOverlap: 'shiftY' },
                             markLine: {
                                 silent: false,
                                 symbol: 'none',
-                                lineStyle: { type: 'dashed', width: 2, opacity: 0.8, color: '#ffc000' },
+                                lineStyle: { type: 'dashed', width: 1, opacity: 0.8, color: '#ffc000' },
                                 data: [
                                     {
                                         yAxis: 70,  // 统一为70%
@@ -2205,12 +2216,13 @@ const Dashboard = {
                         ...globalOptions.xAxis
                     },
                     yAxis: {
+                        ...globalOptions.yAxis,
                         name: '案均赔款(元)',
                         min: 0,
                         axisLabel: {
                             formatter: (value) => this.formatInteger(value)
                         },
-                        ...globalOptions.yAxis
+                        splitLine: { show: false }  // 确保不显示网格线
                     },
                     series: [{
                         type: 'scatter',
@@ -2267,7 +2279,7 @@ const Dashboard = {
                         
                         params.forEach(param => {
                             if (param.seriesName === '费用金额') {
-                                result += `${param.marker}费用金额: ${this.formatWanYuanFromYuan(param.value)}万元<br/>`;
+                                result += `${param.marker}费用金额: ${this.formatWanYuanFromYuan(param.value)}<br/>`;
                             } else if (param.seriesName === '费用率') {
                                 result += `${param.marker}费用率: ${this.formatRate(param.value, 1)}%<br/>`;
                             }
@@ -2288,16 +2300,18 @@ const Dashboard = {
                 },
                 yAxis: [
                     {
+                        ...globalOptions.yAxis,
                         type: 'value',
                         name: '费用金额(万元)',
                         position: 'left',
-                        ...globalOptions.yAxis
+                        splitLine: { show: false }  // 确保不显示网格线
                     },
                     {
+                        ...globalOptions.yAxis,
                         type: 'value',
                         name: '比率(%)',
                         position: 'right',
-                        ...globalOptions.yAxis
+                        splitLine: { show: false }  // 确保不显示网格线
                     }
                 ],
                 series: [
@@ -2323,7 +2337,7 @@ const Dashboard = {
                         data: expenseRates,
                         lineStyle: {
                             color: '#0066cc',  // 深蓝色
-                            width: 2
+                            width: 1
                         },
                         itemStyle: {
                             color: '#0066cc'
@@ -2353,7 +2367,7 @@ const Dashboard = {
                         lineStyle: {
                             color: '#ffc000',
                             type: 'dashed',
-                            width: 2,
+                            width: 1,
                             opacity: 0.8
                         },
                         label: {
@@ -2371,7 +2385,7 @@ const Dashboard = {
         option = this._applyResponsiveCategoryXAxis(option, chart);
         chart.setOption(option);
 
-        // 如果是费用支出板块，同时渲染费用结余图表
+        // 如果是费用支出板块，同时渲染费用超支图表
         if (tab === 'expense') {
             this.renderExpenseSurplusChart(data, dimField);
         }
@@ -2402,7 +2416,7 @@ const Dashboard = {
         };
     },
 
-    // 渲染费用结余分析图表
+    // 渲染费用超支分析图表
     renderExpenseSurplusChart(data, dimField) {
         const chartDom = document.getElementById('chart-expense-surplus');
         if (!chartDom) return;
@@ -2430,7 +2444,7 @@ const Dashboard = {
                     const actualRate = item.费用率 || 0;
 
                     let result = `${params[0].axisValue}<br/>`;
-                    result += `费用结余额: ${surplus >= 0 ? '+' : ''}${this.formatWanYuanFromYuan(surplus)}万元`;
+                    result += `费用超支额: ${surplus >= 0 ? '+' : ''}${this.formatWanYuanFromYuan(surplus)}`;
                     result += surplus >= 0 ? '（超支）' : '（节约）';
                     result += '<br/>';
                     result += `费用率超支: ${rateDeviation >= 0 ? '+' : ''}${this.formatRate(Math.abs(rateDeviation), 1)}%<br/>`;
@@ -2441,7 +2455,7 @@ const Dashboard = {
                 }
             },
             legend: {
-                data: ['费用结余额', '费用率超支'],
+                data: ['费用超支额', '费用率超支'],
                 ...globalOptions.legend
             },
             grid: globalOptions.grid,
@@ -2453,8 +2467,9 @@ const Dashboard = {
             yAxis: [
                 {
                     type: 'value',
-                    name: '费用结余额(万元)',
+                    name: '费用超支额(万元)',
                     position: 'left',
+                    splitLine: { show: false },  // 不显示网格线
                     axisLabel: {
                         color: '#333333',
                         formatter: '{value}'
@@ -2467,6 +2482,7 @@ const Dashboard = {
                     type: 'value',
                     name: '费用率超支(%)',
                     position: 'right',
+                    splitLine: { show: false },  // 不显示网格线
                     axisLabel: {
                         color: '#0070c0',
                         formatter: '{value}%'
@@ -2478,25 +2494,38 @@ const Dashboard = {
             ],
             series: [
                 {
-                    name: '费用结余额',
+                    name: '费用超支额',
                     type: 'bar',
                     yAxisIndex: 0,
                     data: surplusAmounts.map((value, index) => ({
                         value: value,
                         itemStyle: {
-                            color: value >= 0 ? '#c00000' : '#00b050' // 红色超支，绿色节约
+                            color: '#d0d0d0' // 浅灰色柱子（统一颜色）
                         }
                     })),
                     label: {
                         show: true,
-                        position: (params) => params.value >= 0 ? 'top' : 'bottom',
+                        position: 'top', // 数值标签统一在柱子上方
                         formatter: (params) => {
-                            const sign = params.value >= 0 ? '+' : '';
-                            return `${sign}${this.formatWanYuanFromYuan(Math.abs(params.value) * 10000)}万`;
+                            const value = params.value;
+                            const sign = value >= 0 ? '+' : '';
+                            const formattedValue = `${sign}${this.formatWanYuanFromYuan(value * 10000)}`;
+                            // 使用富文本格式设置颜色
+                            const style = value >= 0 ? 'positive' : 'negative';
+                            return `{${style}|${formattedValue}}`;
                         },
-                        color: (params) => params.value >= 0 ? '#c00000' : '#00b050',
-                        fontSize: this.calculateOptimalLabelSize(data),
-                        fontWeight: 'bold'
+                        rich: {
+                            positive: {
+                                color: '#ff0000',  // 正值红色
+                                fontWeight: 'bold',
+                                fontSize: this.calculateOptimalLabelSize(data)
+                            },
+                            negative: {
+                                color: '#00b050',  // 负值绿色
+                                fontWeight: 'bold',
+                                fontSize: this.calculateOptimalLabelSize(data)
+                            }
+                        }
                     },
                     markLine: {
                         silent: false,
@@ -2508,7 +2537,7 @@ const Dashboard = {
                                 lineStyle: {
                                     color: '#333333',
                                     type: 'solid',
-                                    width: 2
+                                    width: 1
                                 },
                                 label: {
                                     formatter: '预算基准线',
@@ -2528,7 +2557,7 @@ const Dashboard = {
                     data: rateDeviations,
                     lineStyle: {
                         color: '#0070c0',
-                        width: 2
+                        width: 1
                     },
                     itemStyle: {
                         color: '#0070c0'
@@ -2556,7 +2585,7 @@ const Dashboard = {
                                 lineStyle: {
                                     color: '#ffc000',
                                     type: 'dashed',
-                                    width: 2,
+                                    width: 1,
                                     opacity: 0.8
                                 },
                                 label: {
