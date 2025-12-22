@@ -535,6 +535,68 @@ body {
     min-height: 500px;
 }
 
+.chart-roi {
+    height: 500px;
+    min-height: 500px;
+}
+
+.chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.chart-header .chart-title {
+    margin: 0;
+}
+
+.roi-dimension-switch {
+    margin-left: auto;
+}
+
+.chart-legend-info {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 3px solid #0070c0;
+}
+
+.chart-legend-info .legend-title {
+    font-size: 13px;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.chart-legend-info .legend-item {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.7;
+}
+
+.chart-legend-info .legend-swatch {
+    display: inline-block;
+    width: 12px;
+    margin-right: 6px;
+    font-weight: 700;
+}
+
+.chart-legend-info .legend-blue {
+    color: #0070c0;
+}
+
+.chart-legend-info .legend-green {
+    color: #00b050;
+}
+
+.chart-legend-info .legend-red {
+    color: #c00000;
+}
+
 .chart-title {
     font-size: 18px;
     font-weight: 700;

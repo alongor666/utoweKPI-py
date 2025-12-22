@@ -333,6 +333,25 @@
                     <h3 class="chart-title">费用超支分析</h3>
                     <div id="chart-expense-surplus" class="chart"></div>
                 </div>
+
+                <!-- 投产效率分析图表 -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">投产效率分析</h3>
+                        <div class="dimension-switch roi-dimension-switch" id="roi-dimension-switch">
+                            <button class="dimension-btn active" onclick="Dashboard.switchROIDimension('org', this)">三级机构</button>
+                            <button class="dimension-btn" onclick="Dashboard.switchROIDimension('category', this)">客户类别</button>
+                            <button class="dimension-btn" onclick="Dashboard.switchROIDimension('businessType', this)">业务类型</button>
+                        </div>
+                    </div>
+                    <div id="chart-roi" class="chart chart-roi"></div>
+                    <div class="chart-legend-info">
+                        <div class="legend-title">指标说明:</div>
+                        <div class="legend-item"><span class="legend-swatch legend-blue">█</span>费用产出保费比: 每1元费用产出的保费金额</div>
+                        <div class="legend-item"><span class="legend-swatch legend-green">█</span>费用产出边际贡献: 每1元费用产生的净收益(扣除变动成本)</div>
+                        <div class="legend-item"><span class="legend-swatch legend-red">●</span>边际贡献率: 保费中的利润空间(%)</div>
+                    </div>
+                </div>
             </div>
         </div>
         </div> <!-- 结束 ppt-container -->

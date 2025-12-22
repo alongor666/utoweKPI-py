@@ -11,7 +11,8 @@ const Dashboard = {
         premium: 'category',
         cost: 'org',
         loss: 'org',
-        expense: 'org'
+        expense: 'org',
+        roi: 'org'
     },
     currentSubTab: {
         loss: 'bubble'
@@ -315,6 +316,13 @@ const Dashboard = {
         const num = Number(value);
         if (Number.isNaN(num)) return '--';
         return num.toFixed(digits).replace(/\.00$/, '');
+    },
+
+    formatFixed(value, digits = 2) {
+        if (value === undefined || value === null) return '--';
+        const num = Number(value);
+        if (Number.isNaN(num)) return '--';
+        return num.toFixed(digits);
     },
 
     formatInteger(value) {
@@ -1121,6 +1129,16 @@ const Dashboard = {
             }
         }
         this.renderChart(tab);
+    },
+
+    switchROIDimension(dimension, button) {
+        this.currentDimensions.roi = dimension;
+        const container = document.getElementById('roi-dimension-switch');
+        if (container) {
+            container.querySelectorAll('.dimension-btn').forEach(btn => btn.classList.remove('active'));
+            if (button) button.classList.add('active');
+        }
+        this.renderROIChart();
     },
 
     switchSubTab(tab, subTab) {
@@ -2388,6 +2406,7 @@ const Dashboard = {
         // 如果是费用支出板块，同时渲染费用超支图表
         if (tab === 'expense') {
             this.renderExpenseSurplusChart(data, dimField);
+            this.renderROIChart();
         }
 
         // 生成动态标题和正文分析
@@ -2604,6 +2623,286 @@ const Dashboard = {
 
         const responsiveOption = this._applyResponsiveCategoryXAxis(option, chart);
         chart.setOption(responsiveOption);
+    },
+
+    // 渲染投产效率分析图表
+    renderROIChart() {
+        const chartDom = document.getElementById('chart-roi');
+        if (!chartDom) return;
+
+        const dimension = this.currentDimensions.roi || 'org';
+        const config = this.getROIDimensionConfig(dimension);
+        if (!config || !config.data) return;
+
+        let sourceData = Array.isArray(config.data) ? [...config.data] : [];
+        if (dimension === 'org') {
+            sourceData = sourceData.filter(item => item[config.label] !== '本部').slice(0, 12);
+        }
+
+        const roiData = this.prepareROIData(sourceData, config.label);
+
+        if (echarts.getInstanceByDom(chartDom)) echarts.dispose(chartDom);
+        const chart = echarts.init(chartDom);
+
+        if (!roiData.length) {
+            chart.setOption({
+                title: {
+                    text: '暂无数据',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16,
+                        fontWeight: 'bold'
+                    }
+                }
+            });
+            return;
+        }
+
+        const option = this.getROIChartOption(roiData);
+        chart.setOption(option);
+    },
+
+    getROIDimensionConfig(dimension) {
+        if (dimension === 'category') {
+            return { data: this.data.dataByCategory, label: '客户类别' };
+        }
+        if (dimension === 'businessType') {
+            return { data: this.data.dataByBusinessType, label: '业务类型简称' };
+        }
+        return { data: this.data.dataByOrg, label: '机构' };
+    },
+
+    prepareROIData(data, dimField) {
+        const result = [];
+
+        data.forEach((item, index) => {
+            const name = item[dimField];
+            if (!name) return;
+
+            const premium = Number(item.签单保费) || 0;
+            const expense = Number(item.费用额) || 0;
+            const maturedPremium = Number(item.满期保费) || 0;
+            const reportedClaim = Number(item.已报告赔款) || 0;
+
+            if (expense <= 0 || premium <= 0) return;
+
+            // 边际贡献额计算：签单保费 × (1 - 已报告赔款/满期保费 - 费用额/签单保费)
+            let marginContribution = 0;
+            if (premium > 0 && maturedPremium > 0) {
+                const claimRate = reportedClaim / maturedPremium;
+                const expenseRate = expense / premium;
+                marginContribution = premium * (1 - claimRate - expenseRate);
+            }
+
+            result.push({
+                维度值: name,
+                费用额: expense,
+                费用产出保费比: expense > 0 ? premium / expense : 0,
+                费用产出边际贡献: expense > 0 ? marginContribution / expense : 0,
+                边际贡献率: premium > 0 ? (marginContribution / premium) * 100 : 0,
+                _index: index
+            });
+        });
+
+        result.sort((a, b) => {
+            const diff = (b.费用额 || 0) - (a.费用额 || 0);
+            if (diff !== 0) return diff;
+            return (a._index || 0) - (b._index || 0);
+        });
+
+        return result;
+    },
+
+    getROIChartOption(data) {
+        const globalOptions = this.getGlobalChartOptions();
+        const marginSeriesData = data.map(item => {
+            const value = item.费用产出边际贡献 || 0;
+            return value < 0 ? { value, itemStyle: { color: '#c00000' } } : value;
+        });
+
+        return {
+            color: ['#0070c0', '#00b050', '#c00000'],
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'cross' },
+                formatter: (params) => {
+                    if (!params || !params.length) return '';
+                    const dimension = params[0].axisValue;
+                    const getValue = (name) => {
+                        const target = params.find(item => item.seriesName === name);
+                        if (!target) return 0;
+                        const rawValue = typeof target.value === 'object' && target.value !== null
+                            ? target.value.value
+                            : target.value;
+                        const value = Number(rawValue);
+                        return Number.isNaN(value) ? 0 : value;
+                    };
+
+                    const feePremiumRatio = getValue('费用产出保费比');
+                    const feeMarginRatio = getValue('费用产出边际贡献');
+                    const marginRate = getValue('边际贡献率');
+                    const marginColor = feeMarginRatio < 0 ? '#c00000' : '#00b050';
+
+                    return `
+                        <div style="padding: 8px;">
+                            <strong style="font-size: 14px;">${dimension}</strong><br/>
+                            <hr style="margin: 5px 0; border-color: #ddd;"/>
+                            <div style="margin-top: 5px;">
+                                <span style="display:inline-block; width:12px; height:12px; background:#0070c0; margin-right:5px;"></span>
+                                费用产出保费比: <strong>${this.formatFixed(feePremiumRatio, 2)}</strong><br/>
+                                <span style="display:inline-block; width:12px; height:12px; background:${marginColor}; margin-right:5px;"></span>
+                                费用产出边际贡献: <strong>${this.formatFixed(feeMarginRatio, 2)}</strong><br/>
+                                <span style="display:inline-block; width:12px; height:12px; background:#c00000; margin-right:5px;"></span>
+                                边际贡献率: <strong>${this.formatFixed(marginRate, 1)}</strong>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            legend: {
+                data: ['费用产出保费比', '费用产出边际贡献', '边际贡献率'],
+                top: 0,
+                ...globalOptions.legend
+            },
+            grid: {
+                ...globalOptions.grid,
+                top: '12%',
+                bottom: '18%'
+            },
+            xAxis: {
+                type: 'category',
+                data: data.map(item => item.维度值),
+                axisLabel: {
+                    ...globalOptions.xAxis.axisLabel,
+                    rotate: 45,
+                    fontSize: 10,
+                    interval: 0,
+                    hideOverlap: false,
+                    formatter: (value) => {
+                        const text = String(value ?? '');
+                        return text.length > 8 ? `${text.slice(0, 8)}...` : text;
+                    }
+                },
+                axisLine: globalOptions.xAxis.axisLine,
+                axisTick: globalOptions.xAxis.axisTick,
+                splitLine: { show: false }
+            },
+            yAxis: [
+                {
+                    ...globalOptions.yAxis,
+                    type: 'value',
+                    name: '费用产出比(元)',
+                    position: 'left',
+                    axisLabel: {
+                        ...globalOptions.yAxis.axisLabel,
+                        formatter: '{value}',
+                        color: '#666',
+                        fontSize: 11
+                    },
+                    splitLine: { show: false }
+                },
+                {
+                    ...globalOptions.yAxis,
+                    type: 'value',
+                    name: '边际贡献率(%)',
+                    position: 'right',
+                    axisLabel: {
+                        ...globalOptions.yAxis.axisLabel,
+                        formatter: '{value}%',
+                        color: '#666',
+                        fontSize: 11
+                    },
+                    splitLine: { show: false }
+                }
+            ],
+            series: [
+                {
+                    name: '费用产出保费比',
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: data.map(item => item.费用产出保费比 || 0),
+                    barWidth: '18%',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: (p) => {
+                            const rawValue = typeof p.value === 'object' && p.value !== null ? p.value.value : p.value;
+                            return this.formatFixed(rawValue, 2);
+                        },
+                        color: '#000000',
+                        fontSize: 11,
+                        fontWeight: 'bold'
+                    },
+                    itemStyle: {
+                        color: '#0070c0',
+                        borderRadius: [4, 4, 0, 0],
+                        borderColor: 'rgba(255, 255, 255, 0.8)',
+                        borderWidth: 1
+                    }
+                },
+                {
+                    name: '费用产出边际贡献',
+                    type: 'bar',
+                    yAxisIndex: 0,
+                    data: marginSeriesData,
+                    barWidth: '18%',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: (p) => {
+                            const rawValue = typeof p.value === 'object' && p.value !== null ? p.value.value : p.value;
+                            const value = Number(rawValue);
+                            const style = value < 0 ? 'negative' : 'positive';
+                            return `{${style}|${this.formatFixed(value, 2)}}`;
+                        },
+                        rich: {
+                            positive: {
+                                color: '#000000',
+                                fontWeight: 'bold',
+                                fontSize: 11
+                            },
+                            negative: {
+                                color: '#c00000',
+                                fontWeight: 'bold',
+                                fontSize: 11
+                            }
+                        }
+                    },
+                    itemStyle: {
+                        color: '#00b050',
+                        borderRadius: [4, 4, 0, 0],
+                        borderColor: 'rgba(255, 255, 255, 0.8)',
+                        borderWidth: 1
+                    }
+                },
+                {
+                    name: '边际贡献率',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: data.map(item => item.边际贡献率 || 0),
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: (p) => `${this.formatFixed(p.value, 1)}%`,
+                        color: '#c00000',
+                        fontSize: 11
+                    },
+                    lineStyle: {
+                        color: '#c00000',
+                        width: 1
+                    },
+                    itemStyle: {
+                        color: '#c00000',
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    },
+                    symbolSize: 6,
+                    smooth: false
+                }
+            ]
+        };
     },
 
     getDrillDownDimensions() {
