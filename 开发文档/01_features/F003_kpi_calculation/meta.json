@@ -2,15 +2,122 @@
   "id": "F003",
   "name": "KPI计算引擎",
   "status": "implemented",
+  "description": "核心业务指标计算引擎，支持多种KPI公式和阈值告警。计算变动成本率、满期赔付率、费用率、出险率等关键指标",
+  "updated_at": "2025-12-24",
   "core_files": [
-    "src/kpi_calculator.py",
+    "js/data.worker.js",
     "reference/thresholds.json",
-    "reference/year-plans.json",
-    "static/js/static-report-generator.js"
+    "reference/year-plans.json"
   ],
-  "tags": ["KPI计算", "业务指标", "算法"],
-  "description": "核心业务指标计算引擎，支持多种KPI公式和阈值告警",
-  "updated_at": "2025-12-15",
-  "dependencies": ["F001", "F002"],
-  "related_decisions": []
+  "tags": [
+    "KPI计算",
+    "业务指标",
+    "算法",
+    "阈值告警",
+    "性能优化"
+  ],
+  "dependencies": [
+    "F001",
+    "F002"
+  ],
+  "related_decisions": [],
+  "code_references": [
+    {
+      "file": "js/data.worker.js",
+      "lines": "379-445",
+      "label": "KPI计算核心引擎 - calculateKPIsForGroup",
+      "hash": "9d892343",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "447-513",
+      "label": "维度聚合计算 - aggregateByDimension",
+      "hash": "0439d70f",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "515-530",
+      "label": "问题机构识别 - detectProblems",
+      "hash": "4a0c7538",
+      "last_verified": "2025-12-24",
+      "critical": false
+    },
+    {
+      "file": "reference/thresholds.json",
+      "label": "KPI 阈值配置文件",
+      "hash": "待更新",
+      "last_verified": "2025-12-24",
+      "critical": true
+    }
+  ],
+  "doc_references": [
+    {
+      "type": "depends_on",
+      "doc_id": "F001",
+      "reason": "需要解析后的数据作为输入",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "depends_on",
+      "doc_id": "F002",
+      "reason": "需要业务类型映射后的标准化数据",
+      "bidirectional": true,
+      "strength": "strong"
+    }
+  ],
+  "ai_metadata": {
+    "domain": "业务逻辑计算",
+    "complexity": "high",
+    "key_concepts": [
+      "变动成本率计算（满期赔付率 + 费用率）",
+      "满期赔付率（已报告赔款 / 满期保费）",
+      "费用率（费用额 / 签单保费）",
+      "出险率（赔案件数 / 保单件数）",
+      "案均赔款计算",
+      "保费进度达成率（考虑时间进度）",
+      "字段映射容错（支持中英文字段名）",
+      "安全除法（避免除零错误）",
+      "阈值告警机制"
+    ],
+    "entry_points": [
+      "calculateKPIsForGroup",
+      "aggregateByDimension",
+      "detectProblems"
+    ],
+    "output_contracts": {
+      "calculateKPIsForGroup": {
+        "returns": "Object",
+        "description": "返回包含所有 KPI 指标的对象：签单保费、满期保费、已报告赔款、费用额、满期赔付率、费用率、变动成本率、出险率、案均赔款、年计划达成率"
+      },
+      "aggregateByDimension": {
+        "returns": "Array<Object>",
+        "description": "返回按维度聚合的 KPI 数组，包含贡献度指标（保费占比、赔款占比、费用占比）"
+      },
+      "detectProblems": {
+        "returns": "Array<string>",
+        "description": "返回问题机构列表，格式: ['机构名(问题类型)']"
+      }
+    },
+    "common_issues": [
+      "KPI 公式必须严格遵循业务定义，任何修改需要业务确认",
+      "除零保护：所有除法运算使用 safeDivide 函数",
+      "字段名映射：支持中英文双语字段名，确保兼容性",
+      "时间进度计算：年计划达成率需要考虑时间进度比例",
+      "阈值配置：从 thresholds.json 动态加载，默认值作为后备",
+      "性能优化：使用 for 循环代替 forEach 提升大数据处理性能",
+      "费用结余计算：负值表示节约，正值表示超支"
+    ]
+  },
+  "change_tracking": {
+    "last_code_change": "2025-12-15",
+    "last_doc_sync": "2025-12-24",
+    "sync_status": "synced",
+    "pending_updates": [],
+    "auto_sync_enabled": true
+  }
 }

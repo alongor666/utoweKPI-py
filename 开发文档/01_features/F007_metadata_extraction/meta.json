@@ -1,18 +1,96 @@
 {
   "id": "F007",
   "name": "智能元数据提取与分析模式识别",
-  "status": "fully_implemented",
+  "status": "implemented",
+  "description": "从CSV数据中智能提取元数据（年度、周次、更新日期、二级机构、三级机构等），支持中英文字段自动映射，根据三级机构数量自动识别单机构/多机构分析模式，并在前端展示完整的元数据预览卡片",
+  "updated_at": "2025-12-24",
   "core_files": [
     "js/data.worker.js",
     "js/dashboard.js",
     "index.html",
     "css/dashboard.css"
   ],
-  "tags": ["元数据提取", "智能识别", "字段映射", "分析模式", "前端", "UI组件"],
-  "description": "从CSV数据中智能提取元数据（年度、周次、更新日期、二级机构、三级机构等），支持中英文字段自动映射，根据三级机构数量自动识别单机构/多机构分析模式，并在前端展示完整的元数据预览卡片",
-  "updated_at": "2025-12-17",
-  "dependencies": ["F001"],
+  "tags": [
+    "元数据提取",
+    "智能识别",
+    "字段映射",
+    "分析模式",
+    "前端",
+    "UI组件"
+  ],
+  "dependencies": [
+    "F001"
+  ],
   "related_decisions": [],
+  "code_references": [
+    {
+      "file": "js/data.worker.js",
+      "lines": "540-620",
+      "label": "智能元数据提取逻辑 - 字段查找与模式识别",
+      "hash": "419081d7",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "636-665",
+      "label": "维度字段映射配置 - dimensionConfigMap",
+      "hash": "315a4821",
+      "last_verified": "2025-12-24",
+      "critical": true
+    }
+  ],
+  "doc_references": [
+    {
+      "type": "depends_on",
+      "doc_id": "F001",
+      "reason": "需要解析后的 CSV 数据进行元数据提取",
+      "bidirectional": true,
+      "strength": "strong"
+    }
+  ],
+  "ai_metadata": {
+    "domain": "数据预处理",
+    "complexity": "medium",
+    "key_concepts": [
+      "智能字段映射（中英文双语支持）",
+      "保单年度提取（policy_start_year/保单年度/年度/年份）",
+      "周次提取（week_number/周次/周）",
+      "更新日期提取（snapshot_date/快照日期/更新日期/统计日期）",
+      "二级机构提取（second_level_organization/二级机构）",
+      "三级机构统计与去重",
+      "单机构/多机构分析模式识别",
+      "动态标题生成",
+      "字段容错查找（findVal函数）",
+      "日期格式验证（YYYY-MM-DD）"
+    ],
+    "entry_points": [
+      "processData (包含元数据提取逻辑)"
+    ],
+    "output_contracts": {
+      "metadata": {
+        "returns": "Object",
+        "description": "返回包含 year, week, updateDate, company, mode, orgCount, orgList 等字段的元数据对象"
+      }
+    },
+    "common_issues": [
+      "字段名映射：支持中英文多种字段名，如 'policy_start_year' 或 '保单年度'",
+      "缺失字段处理：使用默认值或 null，不抛出错误",
+      "日期格式验证：检查是否符合 YYYY-MM-DD 格式，不符合则警告",
+      "分析模式识别：orgList.length > 1 为多机构，= 1 为单机构",
+      "二级机构优先：title 优先使用二级机构字段，单机构模式下使用唯一的三级机构",
+      "字段查找顺序：按优先级尝试多个可能的字段名，第一个非空值即返回",
+      "Set 去重：三级机构使用 Set 自动去重",
+      "控制台调试：未找到字段时输出警告日志"
+    ]
+  },
+  "change_tracking": {
+    "last_code_change": "2025-12-17",
+    "last_doc_sync": "2025-12-24",
+    "sync_status": "synced",
+    "pending_updates": [],
+    "auto_sync_enabled": true
+  },
   "implemented_features": [
     "智能字段映射（支持中英文字段名）",
     "保单年度提取（保单年度/policy_start_year/年度/年份）",

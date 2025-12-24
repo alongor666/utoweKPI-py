@@ -2,14 +2,133 @@
   "id": "F001",
   "name": "多源数据摄入与解析",
   "status": "implemented",
+  "description": "基于 Web Worker 的高性能多源数据解析（CSV/Excel/JSON），支持 200MB+ 大文件与异步处理",
+  "updated_at": "2025-12-23",
   "core_files": [
     "js/data.worker.js",
     "js/static-report-generator.js",
     "index.html"
   ],
-  "tags": ["数据处理", "CSV解析", "Excel解析", "JSON解析", "WebWorker", "性能优化"],
-  "description": "基于 Web Worker 的高性能多源数据解析（CSV/Excel/JSON），支持 200MB+ 大文件与异步处理",
-  "updated_at": "2025-12-16",
-  "dependencies": ["F002"],
-  "related_decisions": ["D002_JavaScript数据聚合逻辑对等实现.md"]
+  "tags": [
+    "数据处理",
+    "CSV解析",
+    "Excel解析",
+    "JSON解析",
+    "WebWorker",
+    "性能优化"
+  ],
+  "dependencies": [
+    "F002"
+  ],
+  "related_decisions": [
+    "D002_JavaScript数据聚合逻辑对等实现.md"
+  ],
+  "code_references": [
+    {
+      "file": "js/data.worker.js",
+      "lines": "62-72",
+      "label": "文件格式分发器 - parseFile",
+      "hash": "e6c970ac",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "119-145",
+      "label": "CSV解析主逻辑 - parseCSV",
+      "hash": "060dce14",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "95-117",
+      "label": "Excel解析逻辑 - parseExcel",
+      "hash": "7a9d329a",
+      "last_verified": "2025-12-24",
+      "critical": false
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "74-93",
+      "label": "JSON解析逻辑 - parseJSON",
+      "hash": "7310bbea",
+      "last_verified": "2025-12-24",
+      "critical": false
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "12-60",
+      "label": "Worker消息处理器 - onmessage",
+      "hash": "f1a78132",
+      "last_verified": "2025-12-24",
+      "critical": true
+    }
+  ],
+  "doc_references": [
+    {
+      "type": "depends_on",
+      "doc_id": "F002",
+      "reason": "解析后的数据需要通过业务类型映射模块进行标准化",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "implements",
+      "doc_id": "D002",
+      "reason": "实现了JavaScript数据聚合逻辑对等方案",
+      "bidirectional": false,
+      "strength": "medium"
+    }
+  ],
+  "ai_metadata": {
+    "domain": "数据处理",
+    "complexity": "medium",
+    "key_concepts": [
+      "Web Worker 异步处理",
+      "PapaParse CSV解析库",
+      "SheetJS Excel解析",
+      "大文件流式处理",
+      "BOM字符处理",
+      "文件格式自动检测"
+    ],
+    "entry_points": [
+      "parseFile",
+      "parseCSV",
+      "parseExcel",
+      "parseJSON"
+    ],
+    "output_contracts": {
+      "parseFile": {
+        "returns": "void",
+        "description": "异步解析文件，通过 postMessage 发送 parse_complete 或 error 事件"
+      },
+      "parseCSV": {
+        "returns": "void",
+        "description": "解析 CSV 文件，结果存储到 rawCSVData 全局变量"
+      },
+      "parseExcel": {
+        "returns": "void",
+        "description": "解析 Excel 文件（.xlsx/.xls），读取第一个工作表"
+      },
+      "parseJSON": {
+        "returns": "void",
+        "description": "解析 JSON 文件，要求根对象必须是数组"
+      }
+    },
+    "common_issues": [
+      "CSV 文件包含 BOM 字符导致首列字段名错误 - 已通过 transformHeader 处理",
+      "Excel 空单元格默认为 undefined - 已使用 defval: '' 处理",
+      "大文件解析可能导致内存压力 - 建议分批处理或流式解析",
+      "Worker 通信需要序列化，避免传递大对象",
+      "空行过滤逻辑：CSV 和 Excel 使用不同的过滤策略"
+    ]
+  },
+  "change_tracking": {
+    "last_code_change": "2025-12-16",
+    "last_doc_sync": "2025-12-24",
+    "sync_status": "synced",
+    "pending_updates": [],
+    "auto_sync_enabled": true
+  }
 }

@@ -2,6 +2,8 @@
   "id": "F006",
   "name": "静态部署系统",
   "status": "implemented",
+  "description": "完全静态化的部署系统，支持单页应用模式与GitHub Pages自动部署，集成ECharts多源CDN加载，实现纯前端数据分析解决方案",
+  "updated_at": "2025-12-24",
   "core_files": [
     "index.html",
     "js/static-report-generator.js",
@@ -9,9 +11,128 @@
     "css/dashboard.css",
     ".github/workflows/deploy.yml"
   ],
-  "tags": ["静态部署", "GitHub Pages", "SPA", "UI优化", "CDN优化"],
-  "description": "完全静态化的部署系统，支持单页应用模式与GitHub Pages自动部署，集成ECharts多源CDN加载",
-  "updated_at": "2025-12-16",
-  "dependencies": ["F001", "F008"],
-  "related_decisions": ["D001_ECharts-CDN加载优化.md", "D002_JavaScript数据聚合逻辑对等实现.md"]
+  "tags": [
+    "静态部署",
+    "GitHub Pages",
+    "SPA",
+    "UI优化",
+    "CDN优化",
+    "纯前端架构"
+  ],
+  "dependencies": [
+    "F001",
+    "F008"
+  ],
+  "related_decisions": [
+    "D001_ECharts-CDN加载优化.md",
+    "D002_JavaScript数据聚合逻辑对等实现.md"
+  ],
+  "code_references": [
+    {
+      "file": "index.html",
+      "lines": "1-50",
+      "label": "HTML 主框架 - SPA 容器结构",
+      "hash": "4850ffa9",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/static-report-generator.js",
+      "lines": "1-100",
+      "label": "静态报告生成器 - Worker 管理",
+      "hash": "ba477054",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/dashboard.js",
+      "lines": "1-100",
+      "label": "Dashboard 对象定义 - 状态管理",
+      "hash": "b390a4d2",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "label": "GitHub Actions 自动部署配置",
+      "hash": "待更新",
+      "last_verified": "2025-12-24",
+      "critical": false
+    }
+  ],
+  "doc_references": [
+    {
+      "type": "depends_on",
+      "doc_id": "F001",
+      "reason": "依赖数据解析功能提供数据源",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "depends_on",
+      "doc_id": "F008",
+      "reason": "依赖可视化组件进行数据展示",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "implements",
+      "doc_id": "D001",
+      "reason": "实现了 ECharts 多源 CDN 加载策略",
+      "bidirectional": false,
+      "strength": "medium"
+    },
+    {
+      "type": "implements",
+      "doc_id": "D002",
+      "reason": "实现了纯 JavaScript 数据聚合逻辑",
+      "bidirectional": false,
+      "strength": "medium"
+    }
+  ],
+  "ai_metadata": {
+    "domain": "部署与架构",
+    "complexity": "medium",
+    "key_concepts": [
+      "单页应用（SPA）架构",
+      "静态资源部署",
+      "GitHub Pages 自动化",
+      "ECharts CDN 多源加载（国内/国际）",
+      "纯前端数据处理（无后端依赖）",
+      "Web Worker 异步架构",
+      "响应式布局",
+      "麦肯锡风格 UI",
+      "离线运行能力"
+    ],
+    "entry_points": [
+      "Dashboard",
+      "StaticReportGenerator"
+    ],
+    "output_contracts": {
+      "Dashboard": {
+        "returns": "Object",
+        "description": "仪表盘主对象，管理状态、事件和渲染"
+      },
+      "StaticReportGenerator": {
+        "returns": "Object",
+        "description": "静态报告生成器，管理 Worker 通信和数据处理"
+      }
+    },
+    "common_issues": [
+      "GitHub Pages 仅支持静态文件，不能使用服务器端处理",
+      "ECharts CDN 加载失败时需要回退到备用源",
+      "大文件上传需要在客户端处理，避免超时",
+      "跨域问题：确保所有资源都是 HTTPS 或相对路径",
+      "浏览器兼容性：需要支持 Web Worker 和 ES6+",
+      "离线缓存：考虑使用 Service Worker（可选）",
+      "部署路径：GitHub Pages 默认路径为 /仓库名/，需要适配"
+    ]
+  },
+  "change_tracking": {
+    "last_code_change": "2025-12-16",
+    "last_doc_sync": "2025-12-24",
+    "sync_status": "synced",
+    "pending_updates": [],
+    "auto_sync_enabled": true
+  }
 }

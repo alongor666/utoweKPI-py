@@ -1,0 +1,263 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://autowrkpi.com/schemas/meta.json",
+  "title": "功能模块元数据 Schema",
+  "description": "定义功能模块元数据的结构，支持代码-文档双向链接和 AI 理解",
+  "type": "object",
+  "required": ["id", "name", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^F\\d{3}$",
+      "description": "功能模块唯一标识符，格式: F001, F002...",
+      "examples": ["F001", "F002", "F010"]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100,
+      "description": "功能模块名称",
+      "examples": ["多源数据摄入与解析", "KPI计算引擎"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["planned", "in_progress", "implemented", "deprecated", "fully_implemented"],
+      "description": "功能状态",
+      "default": "planned"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "功能简要描述（1-2 句话）"
+    },
+    "core_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "核心文件路径列表（原有字段，保持兼容性）",
+      "examples": [["js/data.worker.js", "js/dashboard.js"]]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "标签列表（原有字段，保持兼容性）",
+      "examples": [["数据处理", "CSV解析", "性能优化"]]
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date",
+      "description": "最后更新日期（原有字段）",
+      "examples": ["2025-12-23"]
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "依赖的其他功能模块 ID 列表（原有字段）",
+      "examples": [["F001", "F002"]]
+    },
+    "related_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "相关技术决策文档（原有字段）",
+      "examples": [["D001_ECharts-CDN加载优化.md"]]
+    },
+    "code_references": {
+      "type": "array",
+      "description": "🆕 代码引用列表 - 精确定位到行号",
+      "items": {
+        "$ref": "#/definitions/CodeReference"
+      }
+    },
+    "doc_references": {
+      "type": "array",
+      "description": "🆕 文档交叉引用列表",
+      "items": {
+        "$ref": "#/definitions/DocReference"
+      }
+    },
+    "ai_metadata": {
+      "type": "object",
+      "description": "🆕 AI 理解元数据",
+      "$ref": "#/definitions/AIMetadata"
+    },
+    "change_tracking": {
+      "type": "object",
+      "description": "🆕 变更追踪信息",
+      "$ref": "#/definitions/ChangeTracking"
+    }
+  },
+  "definitions": {
+    "CodeReference": {
+      "type": "object",
+      "required": ["file", "label"],
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "代码文件路径（相对于项目根目录）",
+          "examples": ["js/data.worker.js", "css/dashboard.css"]
+        },
+        "lines": {
+          "type": "string",
+          "pattern": "^\\d+(-\\d+)?$",
+          "description": "代码行号范围，格式: '145' 或 '145-230'",
+          "examples": ["145-230", "42", "100-150"]
+        },
+        "label": {
+          "type": "string",
+          "description": "代码块的语义标签",
+          "examples": ["CSV解析主逻辑", "KPI计算引擎", "筛选器状态管理"]
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}$",
+          "description": "代码块内容的 SHA-256 哈希（前 8 位），用于检测变更",
+          "examples": ["a3f5d2c1", "7b2e9f4a"]
+        },
+        "last_verified": {
+          "type": "string",
+          "format": "date",
+          "description": "最后验证日期",
+          "examples": ["2025-12-23"]
+        },
+        "critical": {
+          "type": "boolean",
+          "description": "是否为关键代码（变更时强制更新文档）",
+          "default": false
+        }
+      }
+    },
+    "DocReference": {
+      "type": "object",
+      "required": ["type", "doc_id"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["depends_on", "implements", "references", "extends", "conflicts_with", "replaces"],
+          "description": "文档关系类型"
+        },
+        "doc_id": {
+          "type": "string",
+          "description": "目标文档 ID（功能 ID 或决策 ID）",
+          "examples": ["F002", "D001", "M001"]
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "关系说明",
+          "examples": ["业务类型映射依赖", "实现了此决策"]
+        },
+        "bidirectional": {
+          "type": "boolean",
+          "description": "是否为双向关系（需要在目标文档中也建立反向引用）",
+          "default": false
+        },
+        "strength": {
+          "type": "string",
+          "enum": ["weak", "medium", "strong"],
+          "description": "依赖强度",
+          "default": "medium"
+        }
+      }
+    },
+    "AIMetadata": {
+      "type": "object",
+      "description": "帮助 AI 工具理解代码的元数据",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "所属业务域",
+          "examples": ["数据处理", "UI交互", "性能优化", "业务逻辑"]
+        },
+        "complexity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "very_high"],
+          "description": "复杂度等级",
+          "default": "medium"
+        },
+        "key_concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "关键概念列表（帮助 AI 理解上下文）",
+          "examples": [["Web Worker", "异步处理", "大文件处理"]]
+        },
+        "entry_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "主要入口函数/类名",
+          "examples": [["processData", "Dashboard", "calculateKPI"]]
+        },
+        "output_contracts": {
+          "type": "object",
+          "description": "函数输出契约（帮助 AI 理解数据流）",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "returns": {
+                "type": "string",
+                "description": "返回值类型"
+              },
+              "description": {
+                "type": "string",
+                "description": "返回值说明"
+              }
+            }
+          }
+        },
+        "common_issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "常见问题和注意事项",
+          "examples": [["需要检查 Worker 监听器是否正确移除", "大文件可能导致内存溢出"]]
+        }
+      }
+    },
+    "ChangeTracking": {
+      "type": "object",
+      "description": "变更追踪信息",
+      "properties": {
+        "last_code_change": {
+          "type": "string",
+          "format": "date",
+          "description": "最后代码变更日期"
+        },
+        "last_doc_sync": {
+          "type": "string",
+          "format": "date",
+          "description": "最后文档同步日期"
+        },
+        "sync_status": {
+          "type": "string",
+          "enum": ["synced", "needs_update", "diverged", "unknown"],
+          "description": "同步状态",
+          "default": "unknown"
+        },
+        "pending_updates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "待更新内容列表",
+          "examples": [["更新 parseCSV 函数说明", "添加新增参数文档"]]
+        },
+        "auto_sync_enabled": {
+          "type": "boolean",
+          "description": "是否启用自动同步",
+          "default": true
+        }
+      }
+    }
+  }
+}

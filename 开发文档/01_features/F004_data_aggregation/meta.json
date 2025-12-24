@@ -2,13 +2,114 @@
   "id": "F004",
   "name": "数据聚合与统计",
   "status": "implemented",
+  "description": "多维度数据聚合引擎，支持按机构、客户类别、业务类型等维度进行数据汇总和统计分析。计算贡献度指标和时间进度达成率",
+  "updated_at": "2025-12-24",
   "core_files": [
-    "src/kpi_calculator.py",
-    "static/js/static-report-generator.js"
+    "js/data.worker.js"
   ],
-  "tags": ["数据聚合", "统计分析", "多维分析"],
-  "description": "多维度数据聚合统计，支持按业务类型、时间等维度汇总",
-  "updated_at": "2025-12-15",
-  "dependencies": ["F001", "F002", "F003"],
-  "related_decisions": []
+  "tags": [
+    "数据聚合",
+    "统计分析",
+    "多维分析",
+    "贡献度计算"
+  ],
+  "dependencies": [
+    "F001",
+    "F002",
+    "F003"
+  ],
+  "related_decisions": [],
+  "code_references": [
+    {
+      "file": "js/data.worker.js",
+      "lines": "447-513",
+      "label": "维度聚合核心引擎 - aggregateByDimension",
+      "hash": "0439d70f",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "524-577",
+      "label": "维度字段映射配置 - dimensionConfigMap",
+      "hash": "653719ce",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/data.worker.js",
+      "lines": "153-240",
+      "label": "数据处理主流程 - processData",
+      "hash": "806a7f0e",
+      "last_verified": "2025-12-24",
+      "critical": true
+    }
+  ],
+  "doc_references": [
+    {
+      "type": "depends_on",
+      "doc_id": "F001",
+      "reason": "需要解析后的原始数据",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "depends_on",
+      "doc_id": "F002",
+      "reason": "需要映射后的标准化业务类型",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "depends_on",
+      "doc_id": "F003",
+      "reason": "依赖 KPI 计算函数进行指标聚合",
+      "bidirectional": true,
+      "strength": "strong"
+    }
+  ],
+  "ai_metadata": {
+    "domain": "数据聚合与分析",
+    "complexity": "medium",
+    "key_concepts": [
+      "多维度聚合（机构、客户类别、业务类型、能源类型等）",
+      "贡献度计算（保费占比、赔款占比、费用占比）",
+      "时间进度达成率",
+      "维度字段映射容错（支持中英文字段名）",
+      "费用结余计算（结余额 = 保费 × (实际费用率 - 预算阈值)）",
+      "数据分组与排序（按保费降序）",
+      "动态维度选择",
+      "空值过滤处理"
+    ],
+    "entry_points": [
+      "aggregateByDimension",
+      "processData"
+    ],
+    "output_contracts": {
+      "aggregateByDimension": {
+        "returns": "Array<Object>",
+        "description": "返回按维度聚合的数据数组，每项包含维度值、KPI 指标和贡献度指标，按保费降序排列"
+      },
+      "processData": {
+        "returns": "Object",
+        "description": "返回包含全局 KPI 和各维度聚合数据的完整数据结构"
+      }
+    },
+    "common_issues": [
+      "维度字段映射：必须使用 dimensionConfigMap 中定义的标准 key",
+      "空值处理：维度值为空的行会被过滤掉",
+      "贡献度计算：总保费/总赔款为 0 时，占比为 0",
+      "费用结余：负值表示节约，正值表示超支",
+      "排序逻辑：默认按签单保费降序排列",
+      "性能优化：使用 for 循环代替 forEach",
+      "维度值容错：支持'三级机构'、'机构'、'客户类别'等多种字段名"
+    ]
+  },
+  "change_tracking": {
+    "last_code_change": "2025-12-15",
+    "last_doc_sync": "2025-12-24",
+    "sync_status": "synced",
+    "pending_updates": [],
+    "auto_sync_enabled": true
+  }
 }

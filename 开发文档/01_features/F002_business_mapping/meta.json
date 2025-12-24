@@ -2,14 +2,84 @@
   "id": "F002",
   "name": "业务类型映射与转换",
   "status": "implemented",
+  "description": "将原始业务类型映射为标准分类，支持灵活的配置化管理。通过 JSON 配置文件实现业务类型的标准化命名和分类",
+  "updated_at": "2025-12-24",
   "core_files": [
-    "src/mapper.py",
-    "reference/business_type_mapping.json",
-    "static/js/static-report-generator.js"
+    "js/data.worker.js",
+    "reference/business_type_mapping.json"
   ],
-  "tags": ["数据映射", "业务逻辑", "配置化"],
-  "description": "将原始业务类型映射为标准分类，支持灵活的配置管理",
-  "updated_at": "2025-12-15",
-  "dependencies": ["F001"],
-  "related_decisions": []
+  "tags": [
+    "数据映射",
+    "业务逻辑",
+    "配置化",
+    "标准化"
+  ],
+  "dependencies": [
+    "F001"
+  ],
+  "related_decisions": [],
+  "code_references": [
+    {
+      "file": "js/data.worker.js",
+      "lines": "301-321",
+      "label": "业务类型映射核心函数 - mapBusinessTypes",
+      "hash": "5513c0b0",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "reference/business_type_mapping.json",
+      "lines": "1-30",
+      "label": "业务类型映射配置文件（元数据）",
+      "hash": "22022cdf",
+      "last_verified": "2025-12-24",
+      "critical": true
+    }
+  ],
+  "doc_references": [
+    {
+      "type": "depends_on",
+      "doc_id": "F001",
+      "reason": "需要解析后的 CSV 数据作为输入",
+      "bidirectional": true,
+      "strength": "strong"
+    }
+  ],
+  "ai_metadata": {
+    "domain": "数据标准化",
+    "complexity": "low",
+    "key_concepts": [
+      "业务类型标准化",
+      "配置驱动的映射",
+      "UI 显示名称映射（ui_short_label）",
+      "业务分类映射（ui_category）",
+      "内存优化（原地修改）",
+      "缺失值处理（默认为'其他'）",
+      "JSON 配置文件管理"
+    ],
+    "entry_points": [
+      "mapBusinessTypes"
+    ],
+    "output_contracts": {
+      "mapBusinessTypes": {
+        "returns": "Array<Object>",
+        "description": "返回映射后的数据数组，每行增加 ui_short_label 和 ui_category 字段"
+      }
+    },
+    "common_issues": [
+      "映射配置文件必须与 CSV 中的业务类型字段一致",
+      "字段名支持中英文双语：business_type_category 或 '业务类型分类'",
+      "内存优化：直接修改原对象而非创建副本",
+      "缺失业务类型时默认为'其他'，避免空值",
+      "映射配置更新后需要重新加载数据才能生效",
+      "ui_short_label 用于图表显示，ui_category 用于分类聚合"
+    ]
+  },
+  "change_tracking": {
+    "last_code_change": "2025-12-15",
+    "last_doc_sync": "2025-12-24",
+    "sync_status": "synced",
+    "pending_updates": [],
+    "auto_sync_enabled": true
+  }
 }

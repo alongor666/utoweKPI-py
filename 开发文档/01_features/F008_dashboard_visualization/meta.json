@@ -2,21 +2,156 @@
   "id": "F008",
   "name": "交互式数据可视化仪表盘",
   "status": "implemented",
+  "description": "基于 SPA 架构的交互式数据分析界面，支持多维下钻、图表联动与实时筛选。实施统一的麦肯锡风格图表规范：无网格线、粗体文字、实线预警线、水平X轴标签",
+  "updated_at": "2025-12-24",
   "core_files": [
     "index.html",
     "js/dashboard.js",
     "css/dashboard.css"
   ],
-  "tags": ["可视化", "ECharts", "交互设计", "SPA", "图表样式规范"],
-  "description": "基于 SPA 架构的交互式数据分析界面，支持多维下钻、图表联动与实时筛选。实施统一的图表样式规范（无网格线、粗体文字、实线预警线、水平X轴标签）",
-  "updated_at": "2025-12-17",
-  "dependencies": ["F001", "F003", "F004"],
-  "related_decisions": ["D001_ECharts-CDN加载优化.md"],
+  "tags": [
+    "可视化",
+    "ECharts",
+    "交互设计",
+    "SPA",
+    "图表样式规范",
+    "麦肯锡风格"
+  ],
+  "dependencies": [
+    "F001",
+    "F003",
+    "F004"
+  ],
+  "related_decisions": [
+    "D001_ECharts-CDN加载优化.md"
+  ],
   "recent_updates": [
     {
       "date": "2025-12-17",
       "type": "enhancement",
       "description": "实施统一的图表样式规范：去除网格线、全局粗体文字、实线预警线、水平X轴标签、坐标轴名称优化"
     }
-  ]
+  ],
+  "code_references": [
+    {
+      "file": "js/dashboard.js",
+      "lines": "1-100",
+      "label": "Dashboard 主对象 - 状态与配置",
+      "hash": "b390a4d2",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/dashboard.js",
+      "lines": "400-650",
+      "label": "图表渲染核心逻辑 - renderChart",
+      "hash": "23cd0e62",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "js/dashboard.js",
+      "lines": "1400-1600",
+      "label": "电商式下钻筛选系统",
+      "hash": "fa407c7b",
+      "last_verified": "2025-12-24",
+      "critical": true
+    },
+    {
+      "file": "css/dashboard.css",
+      "lines": "1-200",
+      "label": "麦肯锡风格样式定义",
+      "hash": "1b65c22c",
+      "last_verified": "2025-12-24",
+      "critical": false
+    }
+  ],
+  "doc_references": [
+    {
+      "type": "depends_on",
+      "doc_id": "F001",
+      "reason": "需要解析后的数据源",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "depends_on",
+      "doc_id": "F003",
+      "reason": "依赖 KPI 计算结果进行可视化",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "depends_on",
+      "doc_id": "F004",
+      "reason": "依赖数据聚合结果",
+      "bidirectional": true,
+      "strength": "strong"
+    },
+    {
+      "type": "implements",
+      "doc_id": "D001",
+      "reason": "使用 ECharts 多源 CDN 加载",
+      "bidirectional": false,
+      "strength": "medium"
+    }
+  ],
+  "ai_metadata": {
+    "domain": "数据可视化",
+    "complexity": "high",
+    "key_concepts": [
+      "ECharts 图表库",
+      "麦肯锡风格设计",
+      "响应式图表",
+      "图表联动",
+      "多维下钻",
+      "电商式筛选",
+      "KPI 卡片展示",
+      "预警线机制",
+      "动态主题配置",
+      "图表交互事件",
+      "X 轴标签优化（45度倾斜，文本截断）",
+      "Y 轴刻度格式化",
+      "颜色映射策略"
+    ],
+    "entry_points": [
+      "Dashboard.renderChart",
+      "Dashboard.renderKPI",
+      "Dashboard.initDrillSelectors",
+      "Dashboard.applyFilters"
+    ],
+    "output_contracts": {
+      "renderChart": {
+        "returns": "void",
+        "description": "渲染 ECharts 图表到指定容器，支持柱状图、折线图、饼图、气泡图、双Y轴组合图"
+      },
+      "renderKPI": {
+        "returns": "void",
+        "description": "渲染 KPI 指标卡片，包含数值、状态指示器和阈值告警"
+      },
+      "applyFilters": {
+        "returns": "void",
+        "description": "应用筛选条件，触发数据重新计算和图表更新"
+      }
+    },
+    "common_issues": [
+      "图表容器必须有明确的宽高，否则 ECharts 无法渲染",
+      "响应式调整：window.resize 时需要调用 chart.resize()",
+      "图表销毁：切换页面前必须 dispose() 避免内存泄漏",
+      "X 轴标签重叠：通过 rotate: 45 和 interval: 0 解决",
+      "预警线必须使用实线（lineStyle: { type: 'solid' }）",
+      "网格线必须隐藏（splitLine: { show: false }）",
+      "文字必须全局粗体（textStyle: { fontWeight: 'bold' }）",
+      "颜色映射：保费贡献度 #e0e0e0，赔款贡献度 #a6a6a6，满期赔付率线条 #0070c0",
+      "数据为空时的占位处理",
+      "图表动画性能优化"
+    ]
+  },
+  "change_tracking": {
+    "last_code_change": "2025-12-17",
+    "last_doc_sync": "2025-12-24",
+    "sync_status": "synced",
+    "pending_updates": [],
+    "auto_sync_enabled": true
+  }
 }

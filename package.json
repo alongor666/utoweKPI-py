@@ -7,6 +7,8 @@
     "start": "python3 -m http.server 8888",
     "update-docs": "node tools/update-docs.js",
     "validate-docs": "node tools/update-docs.js && echo '✅ 文档验证通过'",
+    "validate-meta": "node tools/validate-meta.js",
+    "validate-meta:one": "node tools/validate-meta.js",
     "commit-with-docs": "git add . && git commit -m \"📚 更新代码与文档\" -m \"- 更新了项目代码\" -m \"- 自动更新了相关文档\" && git push"
   },
   "keywords": [
@@ -18,7 +20,10 @@
   ],
   "author": "utoweKPI Team",
   "license": "MIT",
-  "devDependencies": {},
+  "devDependencies": {
+    "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1"
+  },
   "dependencies": {},
   "repository": {
     "type": "git",
