@@ -1,7 +1,7 @@
 # 知识体系全景导航 (Knowledge System Panorama)
 
 > **自动生成**: 由 `tools/update-docs.js` 动态构建
-> **更新时间**: 2025-12-22 23:31:36
+> **更新时间**: 2026-01-02 08:15:03
 
 ---
 
@@ -10,13 +10,13 @@
 | 功能ID | 功能名称 | 状态 | 标签 | 核心文件 |
 |--------|----------|------|------|----------|
 | [F001](开发文档/01_features/F001_csv_parsing/README.md) | 多源数据摄入与解析 | ✅ implemented | 数据处理, CSV解析, Excel解析, JSON解析, WebWorker, 性能优化 | `js/data.worker.js`, `js/static-report-generator.js`, `index.html` |
-| [F002](开发文档/01_features/F002_business_mapping/README.md) | 业务类型映射与转换 | ✅ implemented | 数据映射, 业务逻辑, 配置化 | `src/mapper.py`, `reference/business_type_mapping.json`, `static/js/static-report-generator.js` |
-| [F003](开发文档/01_features/F003_kpi_calculation/README.md) | KPI计算引擎 | ✅ implemented | KPI计算, 业务指标, 算法 | `src/kpi_calculator.py`, `reference/thresholds.json`, `reference/year-plans.json` ... (+1) |
-| [F004](开发文档/01_features/F004_data_aggregation/README.md) | 数据聚合与统计 | ✅ implemented | 数据聚合, 统计分析, 多维分析 | `src/kpi_calculator.py`, `static/js/static-report-generator.js` |
+| [F002](开发文档/01_features/F002_business_mapping/README.md) | 业务类型映射与转换 | ✅ implemented | 数据映射, 业务逻辑, 配置化, 标准化 | `js/data.worker.js`, `reference/business_type_mapping.json` |
+| [F003](开发文档/01_features/F003_kpi_calculation/README.md) | KPI计算引擎 | ✅ implemented | KPI计算, 业务指标, 算法, 阈值告警, 性能优化 | `js/data.worker.js`, `reference/thresholds.json`, `reference/year-plans.json` |
+| [F004](开发文档/01_features/F004_data_aggregation/README.md) | 数据聚合与统计 | ✅ implemented | 数据聚合, 统计分析, 多维分析, 贡献度计算 | `js/data.worker.js` |
 | [F005](开发文档/01_features/F005_report_generation/README.md) | HTML报告生成器 (已弃用) | ⚠️ deprecated | 报告生成, HTML, 弃用 | `js/static-report-generator.js` |
-| [F006](开发文档/01_features/F006_static_deployment/README.md) | 静态部署系统 | ✅ implemented | 静态部署, GitHub Pages, SPA, UI优化, CDN优化 | `index.html`, `js/static-report-generator.js`, `js/dashboard.js` ... (+2) |
-| [F007](开发文档/01_features/F007_metadata_extraction/README.md) | 智能元数据提取与分析模式识别 | fully_implemented | 元数据提取, 智能识别, 字段映射, 分析模式, 前端, UI组件 | `js/data.worker.js`, `js/dashboard.js`, `index.html` ... (+1) |
-| [F008](开发文档/01_features/F008_dashboard_visualization/README.md) | 交互式数据可视化仪表盘 | ✅ implemented | 可视化, ECharts, 交互设计, SPA, 图表样式规范 | `index.html`, `js/dashboard.js`, `css/dashboard.css` |
+| [F006](开发文档/01_features/F006_static_deployment/README.md) | 静态部署系统 | ✅ implemented | 静态部署, GitHub Pages, SPA, UI优化, CDN优化, 纯前端架构 | `index.html`, `js/static-report-generator.js`, `js/dashboard.js` ... (+2) |
+| [F007](开发文档/01_features/F007_metadata_extraction/README.md) | 智能元数据提取与分析模式识别 | ✅ implemented | 元数据提取, 智能识别, 字段映射, 分析模式, 前端, UI组件 | `js/data.worker.js`, `js/dashboard.js`, `index.html` ... (+1) |
+| [F008](开发文档/01_features/F008_dashboard_visualization/README.md) | 交互式数据可视化仪表盘 | ✅ implemented | 可视化, ECharts, 交互设计, SPA, 图表样式规范, 麦肯锡风格 | `index.html`, `js/dashboard.js`, `css/dashboard.css` |
 | [F009](开发文档/01_features/F009_ui_optimization/README.md) | UI优化 - 麦肯锡式仪表盘体验提升 | implementing | ui, ux, visualization, dashboard, optimization | - |
 
 ## 📊 状态概览
@@ -26,30 +26,28 @@
 - **[F005](开发文档/01_features/F005_report_generation/README.md)**: HTML报告生成器 (已弃用)
   - 标签: `报告生成`, `HTML`, `弃用`
 
-### fully_implemented (1)
-
-- **[F007](开发文档/01_features/F007_metadata_extraction/README.md)**: 智能元数据提取与分析模式识别
-  - 标签: `元数据提取`, `智能识别`, `字段映射`, `分析模式`, `前端`, `UI组件`
-
-### ✅ Implemented (6)
+### ✅ Implemented (7)
 
 - **[F001](开发文档/01_features/F001_csv_parsing/README.md)**: 多源数据摄入与解析
   - 标签: `数据处理`, `CSV解析`, `Excel解析`, `JSON解析`, `WebWorker`, `性能优化`
 
 - **[F002](开发文档/01_features/F002_business_mapping/README.md)**: 业务类型映射与转换
-  - 标签: `数据映射`, `业务逻辑`, `配置化`
+  - 标签: `数据映射`, `业务逻辑`, `配置化`, `标准化`
 
 - **[F003](开发文档/01_features/F003_kpi_calculation/README.md)**: KPI计算引擎
-  - 标签: `KPI计算`, `业务指标`, `算法`
+  - 标签: `KPI计算`, `业务指标`, `算法`, `阈值告警`, `性能优化`
 
 - **[F004](开发文档/01_features/F004_data_aggregation/README.md)**: 数据聚合与统计
-  - 标签: `数据聚合`, `统计分析`, `多维分析`
+  - 标签: `数据聚合`, `统计分析`, `多维分析`, `贡献度计算`
 
 - **[F006](开发文档/01_features/F006_static_deployment/README.md)**: 静态部署系统
-  - 标签: `静态部署`, `GitHub Pages`, `SPA`, `UI优化`, `CDN优化`
+  - 标签: `静态部署`, `GitHub Pages`, `SPA`, `UI优化`, `CDN优化`, `纯前端架构`
+
+- **[F007](开发文档/01_features/F007_metadata_extraction/README.md)**: 智能元数据提取与分析模式识别
+  - 标签: `元数据提取`, `智能识别`, `字段映射`, `分析模式`, `前端`, `UI组件`
 
 - **[F008](开发文档/01_features/F008_dashboard_visualization/README.md)**: 交互式数据可视化仪表盘
-  - 标签: `可视化`, `ECharts`, `交互设计`, `SPA`, `图表样式规范`
+  - 标签: `可视化`, `ECharts`, `交互设计`, `SPA`, `图表样式规范`, `麦肯锡风格`
 
 ### implementing (1)
 
@@ -62,6 +60,14 @@
 
 - **[F005](开发文档/01_features/F005_report_generation/README.md)**: HTML报告生成器 (已弃用)
 
+### `标准化` (1)
+
+- **[F002](开发文档/01_features/F002_business_mapping/README.md)**: 业务类型映射与转换
+
+### `纯前端架构` (1)
+
+- **[F006](开发文档/01_features/F006_static_deployment/README.md)**: 静态部署系统
+
 ### `多维分析` (1)
 
 - **[F004](开发文档/01_features/F004_data_aggregation/README.md)**: 数据聚合与统计
@@ -69,6 +75,10 @@
 ### `分析模式` (1)
 
 - **[F007](开发文档/01_features/F007_metadata_extraction/README.md)**: 智能元数据提取与分析模式识别
+
+### `贡献度计算` (1)
+
+- **[F004](开发文档/01_features/F004_data_aggregation/README.md)**: 数据聚合与统计
 
 ### `交互设计` (1)
 
@@ -79,6 +89,10 @@
 - **[F006](开发文档/01_features/F006_static_deployment/README.md)**: 静态部署系统
 
 ### `可视化` (1)
+
+- **[F008](开发文档/01_features/F008_dashboard_visualization/README.md)**: 交互式数据可视化仪表盘
+
+### `麦肯锡风格` (1)
 
 - **[F008](开发文档/01_features/F008_dashboard_visualization/README.md)**: 交互式数据可视化仪表盘
 
@@ -118,15 +132,20 @@
 
 - **[F008](开发文档/01_features/F008_dashboard_visualization/README.md)**: 交互式数据可视化仪表盘
 
-### `性能优化` (1)
+### `性能优化` (2)
 
 - **[F001](开发文档/01_features/F001_csv_parsing/README.md)**: 多源数据摄入与解析
+- **[F003](开发文档/01_features/F003_kpi_calculation/README.md)**: KPI计算引擎
 
 ### `业务逻辑` (1)
 
 - **[F002](开发文档/01_features/F002_business_mapping/README.md)**: 业务类型映射与转换
 
 ### `业务指标` (1)
+
+- **[F003](开发文档/01_features/F003_kpi_calculation/README.md)**: KPI计算引擎
+
+### `阈值告警` (1)
 
 - **[F003](开发文档/01_features/F003_kpi_calculation/README.md)**: KPI计算引擎
 
